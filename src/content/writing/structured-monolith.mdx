@@ -1,0 +1,98 @@
+A monolith is a deployment model, not a requirement to put every responsibility into one tangled codebase.
+
+A well-structured monolith can keep related operations close together while maintaining clear boundaries between business rules, application workflows, persistence, and delivery mechanisms.
+
+The goal is not to maximise the number of layers or folders. It is to make changes easier to understand, test, and maintain.
+
+## Start with the domain
+
+Consider a property management application such as Nyumba. Properties, leases, tenants, rent charges, and payments are related concepts, but they do not all have the same rules.
+
+A lease determines a tenant's relationship with a property. A rent charge represents an amount due for a period. A payment records a financial event. Mixing all these responsibilities into an HTTP route can make the application difficult to reason about as the number of features grows.
+
+A useful structure separates four responsibilities:
+
+- **Domain:** business concepts, invariants, and behaviour.
+- **Application:** use cases and workflow coordination.
+- **Infrastructure:** database access, external services, and technical implementations.
+- **Presentation:** HTTP routes, request validation, and response formatting.
+
+These boundaries describe responsibilities within an application. They do not require four separate deployments.
+
+## Follow one request through the system
+
+Imagine an owner requests a list of tenants belonging to one of their properties.
+
+The HTTP route receives the request and establishes the authenticated caller's context. The application use case coordinates the operation and applies the relevant authorization rules. The repository retrieves the records through the persistence boundary. The presentation layer then returns an appropriate response.
+
+Each step has a distinct responsibility.
+
+The route should not become the only place where the application's business rules live. Otherwise, another entry point—such as a scheduled task or a future interface—may bypass important rules or duplicate their implementation.
+
+Authorization deserves particular attention. Authentication establishes who is making the request; authorization determines what that caller may access. Hiding a button in the frontend does not enforce either property at the backend boundary.
+
+The precise checks still depend on the operation. A property owner accessing their own tenants requires a different resource scope from a tenant viewing their own lease information.
+
+## Dependency direction matters
+
+The domain should not need to import a web framework or database driver merely to express a business rule.
+
+Application logic can depend on interfaces or abstractions where those boundaries are useful. Infrastructure then provides implementations for persistence, messaging, or other technical concerns.
+
+For example, a use case may need to retrieve a lease without needing to know how SQLAlchemy constructs the query. A repository implementation can handle the database-specific details while the application coordinates the workflow.
+
+This separation can make unit tests simpler and reduce the impact of technical changes.
+
+It does not mean every class needs an interface. Abstractions have a cost of their own. They are most valuable when they protect a meaningful boundary, isolate a volatile dependency, or make an important behaviour easier to test.
+
+## Repositories and transaction boundaries
+
+A repository provides an application-facing way to work with persisted domain data. A Unit of Work can coordinate changes that need to commit or roll back together.
+
+These patterns solve related but different problems.
+
+A repository focuses on data access. A Unit of Work focuses on the lifecycle of a transaction across related operations.
+
+Neither pattern automatically guarantees correct authorization, valid domain behaviour, or concurrency safety. Those guarantees still depend on the rules enforced by the application, domain, and database.
+
+The design should make ownership clear: which component decides whether an operation is allowed, which component performs the persistence, and where the transaction begins and ends?
+
+## Keep modules honest
+
+A folder structure alone does not create modularity.
+
+If every module reaches into every other module's internal functions and tables, the codebase remains tightly coupled even if its directories look clean.
+
+Useful questions include:
+
+- Which module owns this business rule?
+- Who is allowed to change this state?
+- Does this use case need another module's public behaviour or its internal details?
+- Can an important use case be tested without starting the entire application?
+- Are transaction boundaries clear when multiple modules participate in one workflow?
+
+The answers should guide module boundaries and dependency rules.
+
+## Why not split everything into services?
+
+Separate services can support independent deployment, scaling, ownership, and fault isolation. They also introduce network communication, additional monitoring, distributed failure modes, and more complicated consistency decisions.
+
+A local function call and a network request do not fail in the same ways. Once a workflow crosses a network boundary, the system must account for timeouts, retries, partial failures, and potentially inconsistent state across services.
+
+Those costs can be justified by real operational or organisational requirements. They are not automatic benefits of adding more services.
+
+A modular monolith lets a team establish meaningful boundaries while keeping deployment and local communication relatively simple. A module can become a separate service later if there is a concrete reason to make that boundary distributed.
+
+## A practical test for modularity
+
+For each module, identify its public operations, owned business rules, persistence responsibilities, and permitted dependencies.
+
+Then test important use cases without requiring the entire application to run. Where integration behaviour matters, add tests that exercise the real database and transaction boundaries.
+
+If the modules remain understandable and changes stay local, the structure is doing useful work. If every change requires touching unrelated modules, the boundaries may need another look.
+
+## The takeaway
+
+Choose the simplest deployment model that fits the requirements, then be deliberate about the boundaries inside it.
+
+A monolith can be modular, testable, and well separated. A collection of microservices can still be tightly coupled. The quality of the boundaries matters more than the number of deployments.

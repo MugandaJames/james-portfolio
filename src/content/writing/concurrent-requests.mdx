@@ -1,0 +1,106 @@
+Many data bugs are invisible when requests are tested one at a time. They appear when two valid requests read the same state and then attempt to change it.
+
+This is a race condition: the outcome depends on how concurrent operations interleave.
+
+In a backend system, a check can be logically correct and still be unsafe if another transaction can change the relevant state before the first transaction writes its result.
+
+## A simple example
+
+Suppose a rent charge is unpaid. Two requests arrive at almost the same time to record a payment against that charge.
+
+A vulnerable workflow might look like this:
+
+1. Request A reads the charge and sees that it is unpaid.
+2. Request B reads the same charge and also sees that it is unpaid.
+3. Both requests decide that payment can proceed.
+4. Both attempt to record a payment.
+
+Each request made a valid decision based on the state it observed. The problem is that neither decision was protected against the other request.
+
+The exact failure depends on the data model and persistence logic. The important point is that a read followed by a write is not automatically one indivisible operation.
+
+## Why an application check is not enough
+
+Consider this check:
+
+```python
+if charge.is_paid:
+    raise PaymentAlreadyRecorded()
+```
+
+It may be useful business logic, but it does not by itself protect the transition.
+
+Between reading `charge.is_paid` and writing the new state, another transaction may read or update the same record. Both requests can pass the check before either one finishes.
+
+The solution is to enforce the invariant at a boundary that can coordinate the competing operations.
+
+## Use a conditional database update
+
+One strategy is to express the condition and state change in the same database statement.
+
+For example, the following SQL is illustrative; the table and column names must match the actual schema:
+
+```sql
+UPDATE rent_charges
+SET status = 'PAID'
+WHERE id = :charge_id
+  AND status = 'UNPAID';
+```
+
+The application checks how many rows were updated.
+
+- If one row was updated, the transition succeeded.
+- If zero rows were updated, the charge did not exist under that identifier or was no longer eligible for the transition. The application can distinguish those cases if the API requires it.
+
+The key idea is that the database evaluates the condition as part of the update. Competing requests cannot both successfully transition the same row from the same original state using this statement.
+
+This protects the state transition, but it does not implement an entire payment workflow. The application must still handle payment records, transaction boundaries, duplicate requests, and other business rules consistently.
+
+## Other concurrency strategies
+
+Conditional updates are not appropriate for every problem. Other useful mechanisms include:
+
+- **Row-level locks:** acquire a lock inside a transaction before reading and changing shared state.
+- **Unique constraints:** prevent duplicate records that violate a uniqueness rule.
+- **Optimistic concurrency control:** detect that a record changed since it was read, often through a version field.
+- **Transaction isolation:** use database guarantees appropriate to the consistency requirements.
+
+These mechanisms solve different problems. A unique constraint can prevent duplicate records, for example, but it does not automatically protect an account balance from an invalid concurrent update.
+
+Choose the mechanism by first stating the invariant. Then determine which database operation or constraint can enforce it.
+
+## Make state transitions explicit
+
+A design is easier to reason about when it expresses the permitted transition rather than allowing arbitrary code to update a status field.
+
+For example, marking a rent charge as paid should require the charge to be in an eligible state. If another transaction has already completed that transition, the losing operation should receive a defined business outcome rather than silently overwriting the newer state.
+
+The persistence layer can enforce the condition, while the application layer translates the outcome into a clear response.
+
+This is also where transaction boundaries matter. If recording a payment and updating a charge must succeed together, both changes need appropriate transactional coordination.
+
+## Test the race, not just the endpoint
+
+A sequential test does not reliably prove that a race condition is prevented.
+
+A useful concurrency test coordinates independent database sessions or requests so they compete for the same resource. It then checks the final persisted state.
+
+For a payment-related workflow, the assertions might include:
+
+- Only the permitted number of payment records exists.
+- The rent charge ends in a valid state.
+- Related balances remain consistent.
+- The losing operation receives a defined outcome.
+- No partial changes remain after a failed transaction.
+
+The test should use the database engine and transaction behaviour the application actually relies on. An in-memory substitute or a mocked repository may not reproduce the locking and isolation behaviour that matters.
+
+Tests also need deliberate coordination. Starting two coroutines at roughly the same time does not guarantee that the dangerous interleaving occurred.
+
+## The takeaway
+
+Concurrency safety does not come from adding more checks to the same unprotected code path.
+
+It comes from identifying the invariant, enforcing it at the correct boundary, defining the losing operation's behaviour, and testing competing transactions against the persistence behaviour the application actually uses.
+
+A successful response is useful. A valid final database state is essential.
