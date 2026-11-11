@@ -1,9 +1,11 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Arrow, SiteFooter, SiteHeader, StatusPill } from "@/components/Chrome";
+import { SiteFooter, SiteHeader, Status } from "@/components/Chrome";
 import { getProject, projects } from "@/content/projects";
+import { APP_BG, galleries } from "@/content/shots";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -25,7 +27,7 @@ export async function generateMetadata({
     title: project.name,
     description: project.summary,
     openGraph: {
-      title: `${project.name} — James Juma Muganda`,
+      title: `${project.name} by James Juma Muganda`,
       description: project.summary,
       type: "article",
     },
@@ -38,21 +40,19 @@ async function CaseStudy({ params }: PageProps) {
 
   if (!project) notFound();
 
+  const gallery = galleries[project.slug] ?? [];
   const index = projects.findIndex((p) => p.slug === project.slug);
   const next = projects[(index + 1) % projects.length];
 
   return (
     <article className="case">
-      <header className="container case-hero">
+      <header className="wrap case-hero">
         <Link href="/work" className="back">
-          ← All work
+          All work
         </Link>
-        <div className="case-meta-top">
-          <span className="eyebrow">{project.group}</span>
-          <StatusPill status={project.status} label={project.statusLabel} />
-        </div>
+        <Status status={project.status} label={project.statusLabel} />
         <h1>{project.name}</h1>
-        <p className="lead">{project.tagline}</p>
+        <p className="case-lede">{project.tagline}</p>
 
         <dl className="facts">
           <div>
@@ -60,12 +60,12 @@ async function CaseStudy({ params }: PageProps) {
             <dd>{project.role}</dd>
           </div>
           <div>
-            <dt>Stack</dt>
+            <dt>Built with</dt>
             <dd>{project.stack.join(", ")}</dd>
           </div>
           {project.links && (
             <div>
-              <dt>Links</dt>
+              <dt>Visit</dt>
               <dd>
                 {project.links.map((link) => (
                   <a
@@ -73,9 +73,9 @@ async function CaseStudy({ params }: PageProps) {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-link"
+                    className="text-link"
                   >
-                    {link.label} <Arrow />
+                    {link.label}
                   </a>
                 ))}
               </dd>
@@ -84,19 +84,43 @@ async function CaseStudy({ params }: PageProps) {
         </dl>
       </header>
 
-      <section className="container flow" aria-label="How it works">
-        {project.flow.map((step, i) => (
-          <div key={step.title} className="flow-step">
-            <span className="flow-index" aria-hidden="true">
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <h3>{step.title}</h3>
-            <p>{step.detail}</p>
-          </div>
-        ))}
+      {gallery.length > 0 && (
+        <section className="wrap gallery" aria-label={`${project.name} screens`}>
+          {gallery.map((shot, i) => {
+            const portrait = shot.src.height > shot.src.width;
+            return (
+              <figure
+                key={shot.alt}
+                className={`gallery-item${portrait ? " is-portrait" : ""}${i === 0 && !portrait ? " is-lead" : ""}`}
+                style={{ backgroundColor: shot.bg ?? APP_BG }}
+              >
+                <Image
+                  src={shot.src}
+                  alt={shot.alt}
+                  placeholder="blur"
+                  priority={i === 0}
+                  sizes={portrait ? "(max-width: 900px) 46vw, 300px" : "(max-width: 900px) 92vw, 1100px"}
+                  className="gallery-img"
+                />
+                <figcaption>{shot.alt}</figcaption>
+              </figure>
+            );
+          })}
+        </section>
+      )}
+
+      <section className="wrap flow" aria-label="How it works">
+        <ol>
+          {project.flow.map((step) => (
+            <li key={step.title}>
+              <h3>{step.title}</h3>
+              <p>{step.detail}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
-      <div className="container case-body">
+      <div className="wrap case-body">
         <section>
           <h2>Overview</h2>
           <p>{project.overview}</p>
@@ -106,8 +130,8 @@ async function CaseStudy({ params }: PageProps) {
           <p>{project.problem}</p>
         </section>
         <section>
-          <h2>Approach</h2>
-          <ul className="checklist">
+          <h2>How I approached it</h2>
+          <ul className="approach">
             {project.approach.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -115,24 +139,22 @@ async function CaseStudy({ params }: PageProps) {
         </section>
         <section>
           <h2>What I hold to</h2>
-          <div className="notes">
+          <div className="beliefs">
             {project.notes.map((note) => (
               <blockquote key={note}>{note}</blockquote>
             ))}
           </div>
         </section>
-        <section className="status-note">
+        <section className="standing">
           <h2>Where it stands</h2>
           <p>{project.limitations}</p>
         </section>
       </div>
 
-      <div className="container">
+      <div className="wrap">
         <Link href={`/work/${next.slug}`} className="next">
-          <span className="eyebrow">Next</span>
-          <span className="next-name">
-            {next.name} <Arrow />
-          </span>
+          <span className="next-label">Next project</span>
+          <span className="next-name">{next.name}</span>
         </Link>
       </div>
     </article>
@@ -144,7 +166,7 @@ export default function CaseStudyPage({ params }: PageProps) {
     <>
       <SiteHeader />
       <main className="page">
-        <Suspense fallback={<div className="container case-hero" aria-busy="true" />}>
+        <Suspense fallback={<div className="wrap case-hero" aria-busy="true" />}>
           <CaseStudy params={params} />
         </Suspense>
       </main>

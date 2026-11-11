@@ -14,13 +14,14 @@ The site presents James as a founder who builds: the WAONA products he leads (WA
 
 ## Stack
 
-Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS v4 (plus hand-written CSS in `globals.css`), Geist and Geist Mono fonts.
+Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS v4 (plus hand-written CSS in `globals.css`), self-hosted Instrument Sans and Instrument Serif.
 
 ## Editing content
 
 All copy lives in `src/content/` — no component changes needed for routine updates.
 
 - `src/content/site.ts` — name, role, email, social links, capabilities and principles.
+- `src/content/shots.ts` — real product screenshots, the WAONA Tickets walkthrough copy, and each case study's gallery.
 - `src/content/projects.ts` — every product and project. Adding an entry creates its card, its row on `/work` and its case-study page automatically.
 
 Project `status` drives the coloured status pill: `live`, `soon`, `design` or `dev`. Keep the `limitations` field honest — it is shown on each case study as "Where it stands".

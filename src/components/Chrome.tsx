@@ -3,26 +3,7 @@ import CopyrightYear from "@/components/CopyrightYear";
 import { site } from "@/content/site";
 import type { ProjectStatus } from "@/content/projects";
 
-export function Arrow({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 16 16"
-      fill="none"
-      className={`arrow ${className}`}
-    >
-      <path
-        d="M4.5 11.5 11.5 4.5M5.5 4.5h6v6"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-export function StatusPill({
+export function Status({
   status,
   label,
 }: {
@@ -30,8 +11,8 @@ export function StatusPill({
   label: string;
 }) {
   return (
-    <span className={`pill pill--${status}`}>
-      <span className="pill-dot" aria-hidden="true" />
+    <span className={`status status--${status}`}>
+      <span className="status-dot" aria-hidden="true" />
       {label}
     </span>
   );
@@ -40,19 +21,16 @@ export function StatusPill({
 export function SiteHeader() {
   return (
     <header className="header">
-      <div className="header-inner">
-        <Link className="mark" href="/" aria-label="James Muganda, home">
-          <span className="mark-glyph" aria-hidden="true">
-            JM
-          </span>
-          <span className="mark-name">James Muganda</span>
+      <div className="wrap header-inner">
+        <Link className="signature" href="/" aria-label="James Juma Muganda, home">
+          James Muganda
         </Link>
         <nav className="nav" aria-label="Main">
           <Link href="/work">Work</Link>
           <Link href="/#about">About</Link>
-          <Link href="/#contact" className="nav-cta">
-            Contact
-          </Link>
+          <a href={`mailto:${site.email}`} className="nav-mail">
+            Email me
+          </a>
         </nav>
       </div>
     </header>
@@ -62,9 +40,9 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="footer">
-      <div className="container footer-inner">
+      <div className="wrap footer-inner">
         <p>
-          © <CopyrightYear /> {site.name}
+          © <CopyrightYear /> {site.name}, Nairobi
         </p>
         <ul className="footer-links">
           {site.socials.map((social) => (

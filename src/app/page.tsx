@@ -1,218 +1,240 @@
 import Link from "next/link";
-import { Arrow, SiteFooter, SiteHeader, StatusPill } from "@/components/Chrome";
-import { projects } from "@/content/projects";
+import { Browser, Phone } from "@/components/Frames";
+import { SiteFooter, SiteHeader, Status } from "@/components/Chrome";
+import Walkthrough from "@/components/Walkthrough";
+import { getProject, projects } from "@/content/projects";
+import { shots } from "@/content/shots";
 import { capabilities, principles, site } from "@/content/site";
 
-const products = projects.filter((p) => p.group === "WAONA product");
+const tickets = getProject("waona-tickets")!;
+const identity = getProject("waona-identity")!;
+const nyumba = getProject("pata-nyumba")!;
 const engineering = projects.filter((p) => p.group === "Engineering");
-
-function Console() {
-  return (
-    <div className="console" aria-label="What I'm building right now">
-      <div className="console-bar">
-        <span className="console-dots" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-        <span className="console-title">waona / products</span>
-      </div>
-      <div className="console-body">
-        <p className="console-line console-cmd">
-          <span className="prompt">$</span> waona status
-        </p>
-        {products.map((product, index) => (
-          <Link
-            key={product.slug}
-            href={`/work/${product.slug}`}
-            className="console-row"
-            style={{ animationDelay: `${0.35 + index * 0.18}s` }}
-          >
-            <span className="console-name">{product.name}</span>
-            <StatusPill status={product.status} label={product.statusLabel} />
-          </Link>
-        ))}
-        <p className="console-line console-muted" style={{ animationDelay: "1s" }}>
-          <span className="prompt">→</span> founder, engineer, still shipping
-          <span className="caret" aria-hidden="true" />
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function ProductCard({ project }: { project: (typeof projects)[number] }) {
-  return (
-    <Link href={`/work/${project.slug}`} className="card">
-      <div className="card-top">
-        <StatusPill status={project.status} label={project.statusLabel} />
-        <Arrow className="card-arrow" />
-      </div>
-      <h3>{project.name}</h3>
-      <p className="card-tagline">{project.tagline}</p>
-      <ul className="tags" aria-label={`${project.name} stack`}>
-        {project.stack.slice(0, 4).map((tech) => (
-          <li key={tech}>{tech}</li>
-        ))}
-      </ul>
-    </Link>
-  );
-}
 
 export default function Home() {
   return (
     <>
       <SiteHeader />
       <main>
+        {/* Hero */}
         <section className="hero">
-          <div className="hero-glow" aria-hidden="true" />
-          <div className="container hero-grid">
+          <div className="wrap hero-grid">
             <div className="hero-copy">
-              <p className="kicker">
-                <span className="kicker-dot" aria-hidden="true" />
-                {site.role}
-              </p>
-              <h1>
-                I build the technology
+              <h1 className="hero-name">
+                James Juma
                 <br />
-                behind <span className="grad">WAONA.</span>
+                Muganda
               </h1>
-              <p className="lead">
-                I&apos;m James Juma Muganda, a founder and software engineer in
-                Nairobi. I design and build products people can trust — identity,
-                ticketing and property platforms made for the Kenyan market.
+              <p className="hero-lead">
+                I founded WAONA, and I build its products: sign-in for
+                developers, tickets for events across Kenya, and a better way to
+                find a home.
               </p>
               <div className="hero-actions">
-                <Link href="/work" className="btn btn--primary">
-                  See my work <Arrow />
+                <Link href="#tickets" className="btn btn--solid">
+                  See the products
                 </Link>
-                <Link href="/#contact" className="btn btn--ghost">
-                  Get in touch
-                </Link>
+                <a href={`mailto:${site.email}`} className="btn btn--line">
+                  Email me
+                </a>
               </div>
             </div>
-            <Console />
+
+            <div className="hero-stage">
+              <Browser
+                shot={shots.tickets.discoverDesktop}
+                priority
+                className="hero-browser"
+                address="WAONA Tickets"
+              />
+              <Phone shot={shots.tickets.ticket} priority className="hero-phone" sizes="200px" />
+            </div>
+          </div>
+
+          <div className="wrap now">
+            <p>
+              WAONA Identity <Status status="live" label="Live" />
+            </p>
+            <p>
+              WAONA Tickets <Status status="soon" label="Launching soon" />
+            </p>
+            <p>
+              Pata Nyumba <Status status="design" label="In design" />
+            </p>
           </div>
         </section>
 
-        <section className="section" id="work">
-          <div className="container">
-            <header className="section-head">
-              <p className="eyebrow">Products</p>
-              <h2>What I&apos;m building at WAONA</h2>
-              <p className="section-sub">
-                WAONA is the technology company I founded. I lead the product
-                and write a lot of the code.
+        {/* WAONA Tickets */}
+        <section className="product" id="tickets">
+          <div className="wrap">
+            <header className="product-head">
+              <Status status={tickets.status} label={tickets.statusLabel} />
+              <h2>WAONA Tickets</h2>
+              <p className="product-lede">
+                Find an event, pay with M-Pesa, and walk in with your phone. I
+                designed the product and built both the FastAPI backend and the
+                Next.js app.
               </p>
             </header>
-            <div className="cards">
-              {products.map((project) => (
-                <ProductCard key={project.slug} project={project} />
-              ))}
-            </div>
 
-            <header className="section-head section-head--tight">
-              <p className="eyebrow">Engineering</p>
-              <h2>Systems I&apos;ve designed</h2>
+            <Walkthrough />
+
+            <div className="organizers">
+              <div className="organizers-copy">
+                <h3>Organizers run everything from Studio</h3>
+                <p>
+                  Drafts, publishing, bookings, earnings, team access and
+                  check-in, in one place. Organizers get a public profile people
+                  can follow, plus promo codes and live sales.
+                </p>
+                <Link href="/work/waona-tickets" className="text-link">
+                  Read the WAONA Tickets case study
+                </Link>
+              </div>
+              <Browser
+                shot={shots.tickets.studio}
+                className="organizers-browser"
+                address="WAONA Tickets Studio"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* WAONA Identity */}
+        <section className="product product--identity" id="identity">
+          <div className="wrap identity-grid">
+            <header className="product-head">
+              <Status status={identity.status} label={identity.statusLabel} />
+              <h2>WAONA Identity</h2>
+              <p className="product-lede">
+                Secure sign-in and registration that developers add to their own
+                apps, so nobody has to build password storage and sessions from
+                scratch again.
+              </p>
+              <ul className="identity-points">
+                <li>Built on Keycloak, speaking OpenID Connect and OAuth 2.0.</li>
+                <li>
+                  Apps send people to one secure sign-in page and get them
+                  straight back, signed in.
+                </li>
+                <li>A Python SDK, MIT licensed, for verifying users in a few lines.</li>
+                <li>Already powering sign-in for WAONA Tickets.</li>
+              </ul>
+              <Link href="/work/waona-identity" className="text-link">
+                Read the WAONA Identity case study
+              </Link>
             </header>
-            <div className="rows">
+
+            <div className="identity-stage">
+              <Browser
+                shot={shots.identity.handoff}
+                className="identity-handoff"
+                address="WAONA Tickets"
+                sizes="(max-width: 900px) 80vw, 460px"
+              />
+              <Browser
+                shot={shots.identity.signIn}
+                className="identity-signin"
+                address="WAONA Identity"
+                sizes="(max-width: 900px) 80vw, 420px"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Pata Nyumba + engineering */}
+        <section className="more">
+          <div className="wrap">
+            <Link href="/work/pata-nyumba" className="nyumba">
+              <div>
+                <Status status={nyumba.status} label={nyumba.statusLabel} />
+                <h2>Pata Nyumba</h2>
+              </div>
+              <p>
+                Renters search for houses by type and area. Landlords and
+                agents manage their properties, assign caretakers, collect rent
+                and handle complaints, all in one system.
+              </p>
+            </Link>
+
+            <div className="systems">
+              <h2 className="systems-title">Systems I&apos;ve designed</h2>
               {engineering.map((project) => (
-                <Link
-                  key={project.slug}
-                  href={`/work/${project.slug}`}
-                  className="row"
-                >
-                  <span className="row-name">{project.name}</span>
-                  <span className="row-tagline">{project.tagline}</span>
-                  <span className="row-stack">
-                    {project.stack.slice(0, 3).join(" · ")}
-                  </span>
-                  <Arrow className="row-arrow" />
+                <Link key={project.slug} href={`/work/${project.slug}`} className="system">
+                  <div className="system-copy">
+                    <h3>{project.name}</h3>
+                    <p>{project.tagline}</p>
+                  </div>
+                  <ol className="system-flow" aria-label={`${project.name} request flow`}>
+                    {project.flow.map((step) => (
+                      <li key={step.title}>{step.title}</li>
+                    ))}
+                  </ol>
                 </Link>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="section section--alt">
-          <div className="container">
-            <header className="section-head">
-              <p className="eyebrow">Capabilities</p>
-              <h2>What I bring to a product</h2>
-            </header>
-            <div className="caps">
-              {capabilities.map((cap) => (
-                <div key={cap.title} className="cap">
-                  <h3>{cap.title}</h3>
-                  <p>{cap.body}</p>
-                  <ul className="tags">
-                    {cap.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* About */}
+        <section className="about" id="about">
+          <div className="wrap about-grid">
+            <h2 className="about-statement">
+              Founder by choice. Engineer by habit.
+            </h2>
+            <div className="about-body">
+              <p>
+                I started WAONA in 2026 to build technology that moves businesses
+                forward: our own products, and custom software for the businesses
+                we work with. I set the direction as founder and CEO, and I&apos;m
+                in the code every day.
+              </p>
+              <p>
+                My work sits where trust matters most. Who someone is, where
+                their money went, whether their ticket is real. I care about what
+                happens under the interface: how data moves, where systems fail,
+                and what it takes to make them hold up.
+              </p>
 
-        <section className="section" id="about">
-          <div className="container about">
-            <div>
-              <p className="eyebrow">About</p>
-              <h2>
-                Founder by choice.
-                <br />
-                <span className="dim">Engineer by habit.</span>
-              </h2>
-            </div>
-            <div className="about-copy">
-              <p>
-                I started WAONA in 2026 to build technology that moves
-                businesses forward — our own products, and custom solutions for
-                the businesses we work with. As founder and CEO I set the
-                direction, and as an engineer I&apos;m in the code every day.
-              </p>
-              <p>
-                My work sits where trust matters most: authentication, payments
-                and the data that people and businesses depend on. I care about
-                what happens under the interface — how data moves, where systems
-                fail, and what it takes to make them hold up.
-              </p>
-              <ul className="principles">
+              <dl className="principles">
                 {principles.map((principle) => (
-                  <li key={principle.title}>
-                    <h3>{principle.title}</h3>
-                    <p>{principle.body}</p>
-                  </li>
+                  <div key={principle.title}>
+                    <dt>{principle.title}</dt>
+                    <dd>{principle.body}</dd>
+                  </div>
                 ))}
-              </ul>
+              </dl>
+
+              <dl className="toolkit">
+                {capabilities.map((cap) => (
+                  <div key={cap.title}>
+                    <dt>{cap.title}</dt>
+                    <dd>{cap.items.join(", ")}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           </div>
         </section>
 
-        <section className="section contact" id="contact">
-          <div className="container contact-inner">
-            <p className="eyebrow">Contact</p>
-            <h2>Have something worth building?</h2>
-            <p className="section-sub">
-              Partnerships, product work or just a good conversation about
-              systems — my inbox is open.
-            </p>
-            <a className="contact-email" href={`mailto:${site.email}`}>
-              {site.email} <Arrow />
+        {/* Contact */}
+        <section className="contact" id="contact">
+          <div className="wrap">
+            <h2 className="contact-title">Have something worth building?</h2>
+            <a className="contact-mail" href={`mailto:${site.email}`}>
+              {site.email}
             </a>
             <ul className="contact-links">
               {site.socials.map((social) => (
                 <li key={social.label}>
                   <a href={social.href} target="_blank" rel="noopener noreferrer">
-                    {social.label} <Arrow />
+                    {social.label}
                   </a>
                 </li>
               ))}
               <li>
                 <a href={site.company.href} target="_blank" rel="noopener noreferrer">
-                  waona.ke <Arrow />
+                  waona.ke
                 </a>
               </li>
             </ul>

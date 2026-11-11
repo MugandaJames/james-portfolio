@@ -6,12 +6,11 @@ export default function NotFound() {
     <>
       <SiteHeader />
       <main className="page">
-        <section className="container page-hero">
-          <p className="eyebrow">404</p>
+        <section className="wrap page-hero">
           <h1>Nothing here.</h1>
-          <p className="lead">That page doesn&apos;t exist, or it moved.</p>
-          <Link href="/" className="btn btn--primary">
-            Back home
+          <p className="page-lede">That page doesn&apos;t exist, or it has moved.</p>
+          <Link href="/" className="btn btn--solid">
+            Go to the home page
           </Link>
         </section>
       </main>
