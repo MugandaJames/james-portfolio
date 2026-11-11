@@ -8,6 +8,12 @@ type Stage = "idle" | "redirect" | "form" | "verify" | "done";
 const EMAIL = "amina@example.com";
 const PASSWORD_LENGTH = 10;
 
+/** A random id; crypto.randomUUID only exists on secure (https) pages, so fall back on plain http. */
+function randomId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return Array.from({ length: 4 }, () => Math.random().toString(16).slice(2, 10)).join("-");
+}
+
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -66,7 +72,7 @@ export default function IdentityDemo() {
     setClaims({
       iss: "WAONA Identity",
       aud: "acme-events",
-      sub: crypto.randomUUID(),
+      sub: randomId(),
       email: EMAIL,
       email_verified: true,
       iat: now,

@@ -13,6 +13,15 @@ gsap.registerPlugin(ScrollTrigger);
  * Skipped entirely for people who prefer reduced motion.
  */
 export default function SmoothScroll() {
+  // Re-measure every scroll scene once web fonts and images have settled,
+  // so pinned sections start from the final layout.
+  useEffect(() => {
+    const refresh = () => ScrollTrigger.refresh();
+    document.fonts?.ready.then(refresh);
+    window.addEventListener("load", refresh);
+    return () => window.removeEventListener("load", refresh);
+  }, []);
+
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
