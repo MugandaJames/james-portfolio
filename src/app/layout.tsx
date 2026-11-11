@@ -1,5 +1,8 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { sans, serif } from "./fonts";
+import Cursor from "@/components/motion/Cursor";
+import SmoothScroll from "@/components/motion/SmoothScroll";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -45,8 +48,19 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${sans.variable} ${serif.variable}`}
+      suppressHydrationWarning
     >
-      <body>{children}</body>
+      <head>
+        {/* Marks JS as available before first paint, so entrance animations never flash. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
+      <body>
+        {children}
+        <SmoothScroll />
+        <Suspense fallback={null}>
+          <Cursor />
+        </Suspense>
+      </body>
     </html>
   );
 }

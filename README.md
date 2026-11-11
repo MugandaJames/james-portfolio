@@ -14,7 +14,9 @@ The site presents James as a founder who builds: the WAONA products he leads (WA
 
 ## Stack
 
-Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS v4 (plus hand-written CSS in `globals.css`), self-hosted Instrument Sans and Instrument Serif.
+Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS v4 (plus hand-written CSS in `globals.css`), self-hosted Instrument Sans and Instrument Serif, GSAP (ScrollTrigger, SplitText) and Lenis for motion.
+
+The home page is interactive: a pinned scroll walkthrough of WAONA Tickets, a flippable ticket, a playable WAONA Identity sign-in demo and a FinPay idempotency demo. See `docs/DESIGN.md` section 4a.
 
 ## Editing content
 

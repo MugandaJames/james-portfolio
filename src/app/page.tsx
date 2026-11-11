@@ -1,84 +1,67 @@
 import Link from "next/link";
-import { Browser, Phone } from "@/components/Frames";
+import { Browser } from "@/components/Frames";
 import { SiteFooter, SiteHeader, Status } from "@/components/Chrome";
+import Hero from "@/components/Hero";
+import IdempotencyDemo from "@/components/IdempotencyDemo";
+import IdentityDemo from "@/components/IdentityDemo";
+import TicketCard from "@/components/TicketCard";
 import Walkthrough from "@/components/Walkthrough";
-import { getProject, projects } from "@/content/projects";
+import Magnetic from "@/components/motion/Magnetic";
+import Marquee from "@/components/motion/Marquee";
+import RevealHeading from "@/components/motion/Reveal";
+import ScrollScale from "@/components/motion/ScrollScale";
+import { getProject } from "@/content/projects";
 import { shots } from "@/content/shots";
 import { capabilities, principles, site } from "@/content/site";
 
 const tickets = getProject("waona-tickets")!;
 const identity = getProject("waona-identity")!;
 const nyumba = getProject("pata-nyumba")!;
-const engineering = projects.filter((p) => p.group === "Engineering");
+const finpay = getProject("finpay")!;
+const monolith = getProject("nyumba")!;
+
+const stack = [
+  "FastAPI",
+  "PostgreSQL",
+  "Next.js",
+  "Keycloak",
+  "M-Pesa Daraja",
+  "OpenID Connect",
+  "Redis",
+  "Kafka",
+  "TypeScript",
+  "Docker",
+];
 
 export default function Home() {
   return (
     <>
       <SiteHeader />
       <main>
-        {/* Hero */}
-        <section className="hero">
-          <div className="wrap hero-grid">
-            <div className="hero-copy">
-              <h1 className="hero-name">
-                James Juma
-                <br />
-                Muganda
-              </h1>
-              <p className="hero-lead">
-                I founded WAONA, and I build its products: sign-in for
-                developers, tickets for events across Kenya, and a better way to
-                find a home.
-              </p>
-              <div className="hero-actions">
-                <Link href="#tickets" className="btn btn--solid">
-                  See the products
-                </Link>
-                <a href={`mailto:${site.email}`} className="btn btn--line">
-                  Email me
-                </a>
-              </div>
-            </div>
+        <Hero />
 
-            <div className="hero-stage">
-              <Browser
-                shot={shots.tickets.discoverDesktop}
-                priority
-                className="hero-browser"
-                address="WAONA Tickets"
-              />
-              <Phone shot={shots.tickets.ticket} priority className="hero-phone" sizes="200px" />
-            </div>
-          </div>
-
-          <div className="wrap now">
-            <p>
-              WAONA Identity <Status status="live" label="Live" />
-            </p>
-            <p>
-              WAONA Tickets <Status status="soon" label="Launching soon" />
-            </p>
-            <p>
-              Pata Nyumba <Status status="design" label="In design" />
-            </p>
-          </div>
-        </section>
+        <Marquee items={stack} />
 
         {/* WAONA Tickets */}
         <section className="product" id="tickets">
           <div className="wrap">
-            <header className="product-head">
-              <Status status={tickets.status} label={tickets.statusLabel} />
-              <h2>WAONA Tickets</h2>
-              <p className="product-lede">
-                Find an event, pay with M-Pesa, and walk in with your phone. I
-                designed the product and built both the FastAPI backend and the
-                Next.js app.
-              </p>
-            </header>
+            <div className="tickets-head">
+              <header className="product-head">
+                <Status status={tickets.status} label={tickets.statusLabel} />
+                <RevealHeading>WAONA Tickets</RevealHeading>
+                <p className="product-lede">
+                  Find an event, pay with M-Pesa, and walk in with your phone. I
+                  designed the product and built both the FastAPI backend and the
+                  Next.js app.
+                </p>
+              </header>
+              <TicketCard />
+            </div>
+          </div>
 
-            <Walkthrough />
+          <Walkthrough />
 
+          <div className="wrap">
             <div className="organizers">
               <div className="organizers-copy">
                 <h3>Organizers run everything from Studio</h3>
@@ -87,15 +70,13 @@ export default function Home() {
                   check-in, in one place. Organizers get a public profile people
                   can follow, plus promo codes and live sales.
                 </p>
-                <Link href="/work/waona-tickets" className="text-link">
+                <Link href="/work/waona-tickets" className="text-link" data-cursor="Read">
                   Read the WAONA Tickets case study
                 </Link>
               </div>
-              <Browser
-                shot={shots.tickets.studio}
-                className="organizers-browser"
-                address="WAONA Tickets Studio"
-              />
+              <ScrollScale>
+                <Browser shot={shots.tickets.studio} address="WAONA Tickets Studio" />
+              </ScrollScale>
             </div>
           </div>
         </section>
@@ -105,7 +86,7 @@ export default function Home() {
           <div className="wrap identity-grid">
             <header className="product-head">
               <Status status={identity.status} label={identity.statusLabel} />
-              <h2>WAONA Identity</h2>
+              <RevealHeading>WAONA Identity</RevealHeading>
               <p className="product-lede">
                 Secure sign-in and registration that developers add to their own
                 apps, so nobody has to build password storage and sessions from
@@ -120,32 +101,35 @@ export default function Home() {
                 <li>A Python SDK, MIT licensed, for verifying users in a few lines.</li>
                 <li>Already powering sign-in for WAONA Tickets.</li>
               </ul>
-              <Link href="/work/waona-identity" className="text-link">
+              <Link href="/work/waona-identity" className="text-link" data-cursor="Read">
                 Read the WAONA Identity case study
               </Link>
             </header>
 
-            <div className="identity-stage">
+            <IdentityDemo />
+          </div>
+
+          <div className="wrap identity-real">
+            <p className="identity-real-label">The real screens</p>
+            <div className="identity-real-row">
               <Browser
                 shot={shots.identity.handoff}
-                className="identity-handoff"
                 address="WAONA Tickets"
-                sizes="(max-width: 900px) 80vw, 460px"
+                sizes="(max-width: 900px) 92vw, 560px"
               />
               <Browser
                 shot={shots.identity.signIn}
-                className="identity-signin"
                 address="WAONA Identity"
-                sizes="(max-width: 900px) 80vw, 420px"
+                sizes="(max-width: 900px) 92vw, 480px"
               />
             </div>
           </div>
         </section>
 
-        {/* Pata Nyumba + engineering */}
+        {/* Pata Nyumba */}
         <section className="more">
           <div className="wrap">
-            <Link href="/work/pata-nyumba" className="nyumba">
+            <Link href="/work/pata-nyumba" className="nyumba" data-cursor="Open">
               <div>
                 <Status status={nyumba.status} label={nyumba.statusLabel} />
                 <h2>Pata Nyumba</h2>
@@ -157,21 +141,37 @@ export default function Home() {
               </p>
             </Link>
 
+            {/* Systems */}
             <div className="systems">
-              <h2 className="systems-title">Systems I&apos;ve designed</h2>
-              {engineering.map((project) => (
-                <Link key={project.slug} href={`/work/${project.slug}`} className="system">
-                  <div className="system-copy">
-                    <h3>{project.name}</h3>
-                    <p>{project.tagline}</p>
-                  </div>
-                  <ol className="system-flow" aria-label={`${project.name} request flow`}>
-                    {project.flow.map((step) => (
-                      <li key={step.title}>{step.title}</li>
-                    ))}
-                  </ol>
-                </Link>
-              ))}
+              <RevealHeading className="systems-title">Systems I&apos;ve designed</RevealHeading>
+
+              <div className="finpay">
+                <div className="finpay-copy">
+                  <h3>{finpay.name}</h3>
+                  <p>{finpay.tagline}</p>
+                  <p className="finpay-sub">
+                    Clients retry when a network times out. A payments system has
+                    to tell a retry from a new payment, or people get charged
+                    twice. Try it.
+                  </p>
+                  <Link href="/work/finpay" className="text-link" data-cursor="Read">
+                    Read the FinPay case study
+                  </Link>
+                </div>
+                <IdempotencyDemo />
+              </div>
+
+              <Link href={`/work/${monolith.slug}`} className="system" data-cursor="Open">
+                <div className="system-copy">
+                  <h3>{monolith.name}</h3>
+                  <p>{monolith.tagline}</p>
+                </div>
+                <ol className="system-flow" aria-label={`${monolith.name} layers`}>
+                  {monolith.flow.map((step) => (
+                    <li key={step.title}>{step.title}</li>
+                  ))}
+                </ol>
+              </Link>
             </div>
           </div>
         </section>
@@ -179,9 +179,9 @@ export default function Home() {
         {/* About */}
         <section className="about" id="about">
           <div className="wrap about-grid">
-            <h2 className="about-statement">
+            <RevealHeading className="about-statement">
               Founder by choice. Engineer by habit.
-            </h2>
+            </RevealHeading>
             <div className="about-body">
               <p>
                 I started WAONA in 2026 to build technology that moves businesses
@@ -220,10 +220,12 @@ export default function Home() {
         {/* Contact */}
         <section className="contact" id="contact">
           <div className="wrap">
-            <h2 className="contact-title">Have something worth building?</h2>
-            <a className="contact-mail" href={`mailto:${site.email}`}>
-              {site.email}
-            </a>
+            <RevealHeading className="contact-title">Have something worth building?</RevealHeading>
+            <Magnetic strength={0.2}>
+              <a className="contact-mail" href={`mailto:${site.email}`} data-cursor="Write">
+                {site.email}
+              </a>
+            </Magnetic>
             <ul className="contact-links">
               {site.socials.map((social) => (
                 <li key={social.label}>
@@ -241,7 +243,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <SiteFooter />
+      <SiteFooter big />
     </>
   );
 }

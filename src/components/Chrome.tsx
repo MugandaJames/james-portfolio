@@ -37,9 +37,14 @@ export function SiteHeader() {
   );
 }
 
-export function SiteFooter() {
+export function SiteFooter({ big = false }: { big?: boolean }) {
   return (
     <footer className="footer">
+      {big && (
+        <p className="footer-mark" aria-hidden="true">
+          Muganda
+        </p>
+      )}
       <div className="wrap footer-inner">
         <p>
           © <CopyrightYear /> {site.name}, Nairobi
