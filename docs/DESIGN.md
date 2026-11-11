@@ -68,11 +68,17 @@ The idea: the interactions are the products' own mechanics, so the site demonstr
 | Studio reveal | Tickets | Desktop screenshot unfolds from tilted to flat while scrolling | ScrollTrigger scrub (`motion/ScrollScale.tsx`) |
 | Sign-in demo | Identity | Plays the real flow with sample data: app hands off, form fills, decoded ID-token claims appear | React state (`IdentityDemo.tsx`) |
 | Idempotency demo | FinPay | Send a payment, retry it with the same key: the retry stops at the idempotency check and the balance is charged once | React state (`IdempotencyDemo.tsx`) |
+| Scroll progress | Whole site | Thin cyan-to-amber bar along the top fills as you read | ScrollTrigger scrub (`motion/ScrollProgress.tsx`) |
+| Mobile menu | Phones (≤640px) | Full-screen panel opens as a circle growing from the button; links rise in; Esc closes | GSAP timeline (`MobileMenu.tsx`) |
+| Hero parallax + float | Home, all devices | Layers move at different speeds while scrolling; chips float gently | ScrollTrigger scrub (`Hero.tsx`) |
+| Phone tilt | Hero, ticket (Android) | The device stack and ticket follow the phone's motion sensor | `deviceorientation` (`motion/device.ts`) |
+| Journey carousel | Tickets, below 1000px | Swipeable row; each phone scales into focus at the centre; dots follow and can be tapped | CSS scroll-snap + `--focus` variable (`Walkthrough.tsx`) |
+| Haptics | Ticket flip, carousel steps, demos, menu (Android) | Short vibrations at key moments | `navigator.vibrate` (`motion/device.ts`) |
 | Heading reveals | Chapter headings only | Lines rise out of a mask on first view | SplitText + ScrollTrigger (`motion/Reveal.tsx`) |
 
 Rules:
 - **Reduced motion:** Lenis, the cursor, tilt, magnetic pull, marquee and reveals are all skipped; the Tickets scene becomes a stacked list; demos run instantly.
-- **Touch devices:** no custom cursor, tilt or magnetic pull. The ticket still flips on tap; the Tickets scene is stacked below 1000px.
+- **Touch devices:** no custom cursor or magnetic pull (they need a mouse). Instead: drag the ticket to tilt it and tap to flip; drag across the hero to lean the device stack; motion-sensor tilt on Android (iOS would need a permission prompt, so it's skipped); swipeable journey carousel; press feedback on buttons; haptics on Android. Scroll parallax, reveals, the marquee and the progress bar work on every device.
 - **No flash:** an inline script adds `.js` to `<html>` before paint; entrance states are hidden only under `.js` and `prefers-reduced-motion: no-preference`.
 - **Accessibility:** the pinned scene is `aria-hidden`; the same steps exist as a visually hidden list for screen readers. Demos announce changes with `aria-live`.
 - **Demos are labelled as demos** and use sample data only.
@@ -110,5 +116,6 @@ Real product screenshots copied from the WAONA website repo into `src/assets/sho
 
 - Removed: Writing section and routes, MDX pipeline, academic/education block, creative-writing copy, JiSave, WhatsApp bot and EUR/USD predictor projects, numbered "case file" labels.
 - Added: founder positioning, real WAONA screenshots, scroll-pinned Tickets walkthrough, screenshot galleries in case studies, principles, toolkit, 404 page.
+- Fourth pass: mobile-first interactions (journey carousel, touch-drag ticket, motion-sensor tilt, haptics, animated mobile menu, scroll progress, hero parallax and float, press feedback).
 - Third pass: GSAP + Lenis motion system, interactive ticket, Identity sign-in demo, FinPay idempotency demo, pinned Tickets scene, custom cursor, magnetic buttons, velocity marquee, footer wordmark.
 - Second pass: replaced Geist and the generic dark template (terminal panel, mono labels, card grid) with a palette and type taken from the WAONA products.

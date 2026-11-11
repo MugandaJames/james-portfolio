@@ -4,13 +4,15 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { gsap } from "gsap";
 import { SplitText } from "gsap/SplitText";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { hasFinePointer, onDeviceTilt, prefersReducedMotion } from "@/components/motion/device";
 import { Browser, Phone } from "@/components/Frames";
 import Magnetic from "@/components/motion/Magnetic";
 import { Status } from "@/components/Chrome";
 import { shots } from "@/content/shots";
 import { site } from "@/content/site";
 
-gsap.registerPlugin(SplitText);
+gsap.registerPlugin(SplitText, ScrollTrigger);
 
 export default function Hero() {
   const root = useRef<HTMLElement>(null);
@@ -56,13 +58,12 @@ export default function Hero() {
     return () => ctx.revert();
   }, []);
 
-  // The device stack leans toward the pointer; each layer moves by its depth.
+  // Depth. With a mouse the stack leans toward the pointer; on phones it
+  // follows the motion sensor and drifts gently. Each layer moves by its depth.
   useEffect(() => {
     const el = root.current;
     const st = stage.current;
-    if (!el || !st) return;
-    if (!window.matchMedia("(pointer: fine)").matches) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el || !st || prefersReducedMotion()) return;
 
     const rotX = gsap.quickTo(st, "rotateX", { duration: 1, ease: "power3" });
     const rotY = gsap.quickTo(st, "rotateY", { duration: 1, ease: "power3" });
@@ -72,10 +73,7 @@ export default function Hero() {
       y: gsap.quickTo(layer, "y", { duration: 1.2, ease: "power3" }),
     }));
 
-    const move = (e: PointerEvent) => {
-      const r = el.getBoundingClientRect();
-      const nx = (e.clientX - r.left) / r.width - 0.5;
-      const ny = (e.clientY - r.top) / r.height - 0.5;
+    const lean = (nx: number, ny: number) => {
       rotY(nx * 16);
       rotX(-ny * 12);
       layers.forEach((l) => {
@@ -83,20 +81,58 @@ export default function Hero() {
         l.y(ny * l.depth * 44);
       });
     };
-    const reset = () => {
-      rotX(0);
-      rotY(0);
-      layers.forEach((l) => {
-        l.x(0);
-        l.y(0);
-      });
-    };
 
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerleave", reset);
+    const ctx = gsap.context(() => {
+      // Scroll parallax for every device: nearer layers travel further.
+      const parallax = { trigger: el, start: "top top", end: "bottom top", scrub: true };
+      gsap.to(".hero-browser", { yPercent: -8, ease: "none", scrollTrigger: parallax });
+      gsap.to(".hero-phone", { yPercent: -22, ease: "none", scrollTrigger: parallax });
+      gsap.to(".hero-chip", { yPercent: -160, ease: "none", scrollTrigger: parallax });
+
+      // Floating chips, after the entrance has placed them.
+      gsap.to(".hero-chip", {
+        y: (i) => (i % 2 ? 8 : -8),
+        duration: 2.6,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        delay: 2,
+        stagger: 0.6,
+      });
+    }, el);
+
+    if (hasFinePointer()) {
+      const move = (e: PointerEvent) => {
+        const r = el.getBoundingClientRect();
+        lean((e.clientX - r.left) / r.width - 0.5, (e.clientY - r.top) / r.height - 0.5);
+      };
+      const reset = () => lean(0, 0);
+      el.addEventListener("pointermove", move);
+      el.addEventListener("pointerleave", reset);
+      return () => {
+        el.removeEventListener("pointermove", move);
+        el.removeEventListener("pointerleave", reset);
+        ctx.revert();
+      };
+    }
+
+    // Phones: tilt with the device, and drag across the hero to lean the stack.
+    const stopTilt = onDeviceTilt((x, y) => lean(x * 0.5, y * 0.5));
+    const drag = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      const r = el.getBoundingClientRect();
+      lean((e.clientX - r.left) / r.width - 0.5, (e.clientY - r.top) / r.height - 0.5);
+    };
+    const release = () => lean(0, 0);
+    st.addEventListener("pointermove", drag);
+    st.addEventListener("pointerup", release);
+    st.addEventListener("pointercancel", release);
     return () => {
-      el.removeEventListener("pointermove", move);
-      el.removeEventListener("pointerleave", reset);
+      stopTilt();
+      st.removeEventListener("pointermove", drag);
+      st.removeEventListener("pointerup", release);
+      st.removeEventListener("pointercancel", release);
+      ctx.revert();
     };
   }, []);
 

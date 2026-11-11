@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import qr from "@/assets/waona-qr.svg";
+import { haptic, hasFinePointer, onDeviceTilt, prefersReducedMotion } from "@/components/motion/device";
 
 /**
  * A WAONA ticket you can play with: it leans toward the pointer with a moving
@@ -13,23 +14,20 @@ export default function TicketCard() {
   const card = useRef<HTMLButtonElement>(null);
   const [flipped, setFlipped] = useState(false);
 
+  const dragged = useRef(false);
+
   useEffect(() => {
     const el = card.current;
-    if (!el) return;
-    if (!window.matchMedia("(pointer: fine)").matches) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el || prefersReducedMotion()) return;
 
     const rx = gsap.quickTo(el, "--rx", { duration: 0.5, ease: "power3" });
     const ry = gsap.quickTo(el, "--ry", { duration: 0.5, ease: "power3" });
     const gx = gsap.quickTo(el, "--gx", { duration: 0.3, ease: "power2" });
     const gy = gsap.quickTo(el, "--gy", { duration: 0.3, ease: "power2" });
 
-    const move = (e: PointerEvent) => {
-      const r = el.getBoundingClientRect();
-      const nx = (e.clientX - r.left) / r.width;
-      const ny = (e.clientY - r.top) / r.height;
-      ry((nx - 0.5) * 24);
-      rx(-(ny - 0.5) * 18);
+    const lean = (nx: number, ny: number) => {
+      ry((nx - 0.5) * 28);
+      rx(-(ny - 0.5) * 22);
       gx(nx * 100);
       gy(ny * 100);
     };
@@ -39,14 +37,67 @@ export default function TicketCard() {
       gx(50);
       gy(30);
     };
+    const fromEvent = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      lean((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+    };
 
-    el.addEventListener("pointermove", move);
+    // Mouse: lean on hover.
+    const hover = (e: PointerEvent) => {
+      if (e.pointerType === "mouse") fromEvent(e);
+    };
+
+    // Touch: press and drag to tilt; a press that barely moves is a tap (flip).
+    let start: { x: number; y: number } | null = null;
+    const down = (e: PointerEvent) => {
+      if (e.pointerType === "mouse") return;
+      start = { x: e.clientX, y: e.clientY };
+      dragged.current = false;
+      el.setPointerCapture(e.pointerId);
+      fromEvent(e);
+    };
+    const move = (e: PointerEvent) => {
+      if (!start || e.pointerType === "mouse") return;
+      if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) dragged.current = true;
+      fromEvent(e);
+    };
+    const up = () => {
+      start = null;
+      reset();
+    };
+
+    el.addEventListener("pointermove", hover);
     el.addEventListener("pointerleave", reset);
+    el.addEventListener("pointerdown", down);
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+
+    // Phones: the ticket also catches the light as the phone tilts.
+    const stopTilt = hasFinePointer() ? () => {} : onDeviceTilt((x, y) => {
+      if (!start) lean(0.5 + x * 0.5, 0.5 + y * 0.5);
+    });
+
     return () => {
-      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointermove", hover);
       el.removeEventListener("pointerleave", reset);
+      el.removeEventListener("pointerdown", down);
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
+      stopTilt();
     };
   }, []);
+
+  function flip() {
+    // A drag on touch tilts the ticket; only a tap flips it.
+    if (dragged.current) {
+      dragged.current = false;
+      return;
+    }
+    haptic(flipped ? 10 : [10, 40, 18]);
+    setFlipped((f) => !f);
+  }
 
   return (
     <div className="ticket-wrap">
@@ -54,9 +105,10 @@ export default function TicketCard() {
         ref={card}
         type="button"
         className={`ticket${flipped ? " is-flipped" : ""}`}
-        onClick={() => setFlipped((f) => !f)}
+        onClick={flip}
         aria-pressed={flipped}
         aria-label={flipped ? "Show the front of the ticket" : "Flip the ticket to see its QR code"}
+        style={{ touchAction: "pan-y" }}
         data-cursor={flipped ? "Flip back" : "Flip"}
       >
         <span className="ticket-inner">
@@ -93,7 +145,7 @@ export default function TicketCard() {
           </span>
         </span>
       </button>
-      <p className="ticket-hint">Tap the ticket to flip it.</p>
+      <p className="ticket-hint">Drag to tilt it. Tap to flip it.</p>
     </div>
   );
 }

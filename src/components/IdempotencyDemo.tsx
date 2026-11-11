@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { haptic } from "@/components/motion/device";
 
 const STAGES = ["Request", "Idempotency", "Transaction", "Outbox"];
 const AMOUNT = 500;
@@ -45,6 +46,7 @@ export default function IdempotencyDemo() {
 
     if (isRetry) {
       setStopped(true);
+      haptic([30, 60, 30]);
       setMessage(`Seen ${key} before. Returned the original result. No second charge.`);
       setBusy(false);
       return;
@@ -58,6 +60,7 @@ export default function IdempotencyDemo() {
     setAt(3);
     await wait(450 * pace);
     setMessage(`Committed ${key}. Event queued in the outbox.`);
+    haptic(15);
     setBusy(false);
   }
 
