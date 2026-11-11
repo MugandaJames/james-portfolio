@@ -16,24 +16,24 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "James Juma Muganda — Backend Engineer & System Designer",
+    default: "James Juma Muganda — Founder & Software Engineer",
     template: "%s — James Juma Muganda",
   },
   description:
-    "The portfolio and engineering journal of James Juma Muganda. Exploring backend engineering, system design, databases, and dependable software.",
+    "James Juma Muganda is the founder and CEO of WAONA and a software engineer in Nairobi, building identity, ticketing and property products for the Kenyan market.",
   applicationName: "James Juma Muganda — Portfolio",
   openGraph: {
     type: "website",
-    title: "James Juma Muganda — Backend Engineer & System Designer",
+    title: "James Juma Muganda — Founder & Software Engineer",
     description:
-      "Selected engineering projects, technical thinking, and notes on building dependable software.",
+      "Founder of WAONA. Products, systems and engineering work by James Juma Muganda.",
     siteName: "James Juma Muganda",
   },
   twitter: {
     card: "summary_large_image",
-    title: "James Juma Muganda — Backend Engineer & System Designer",
+    title: "James Juma Muganda — Founder & Software Engineer",
     description:
-      "Backend engineering, system design, and the craft of building dependable software.",
+      "Founder of WAONA. Products, systems and engineering work by James Juma Muganda.",
   },
   robots: {
     index: true,
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#11120f",
+  themeColor: "#07080b",
   colorScheme: "dark",
 };
 

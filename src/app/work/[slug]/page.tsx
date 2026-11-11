@@ -1,9 +1,8 @@
-
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import ArchitectureDiagram from "@/components/ArchitectureDiagram";
 import { notFound } from "next/navigation";
+import { Arrow, SiteFooter, SiteHeader, StatusPill } from "@/components/Chrome";
 import { getProject, projects } from "@/content/projects";
 
 type PageProps = {
@@ -33,149 +32,123 @@ export async function generateMetadata({
   };
 }
 
-function ProjectCaseStudyFallback() {
-  return (
-    <article className="case-study" aria-busy="true">
-      <div className="case-study-heading">
-        <p className="mono subpage-kicker">LOADING / CASE STUDY</p>
-        <h1>Loading project…</h1>
-        <p className="case-study-summary">
-          Preparing the project details.
-        </p>
-      </div>
-    </article>
-  );
-}
-
-async function ProjectCaseStudyContent({ params }: PageProps) {
+async function CaseStudy({ params }: PageProps) {
   const { slug } = await params;
   const project = getProject(slug);
 
   if (!project) notFound();
 
+  const index = projects.findIndex((p) => p.slug === project.slug);
+  const next = projects[(index + 1) % projects.length];
+
   return (
-    <article className="case-study">
-      <Link className="back-link mono" href="/work">
-        ← ALL PROJECTS
-      </Link>
-
-      <div className="case-study-heading">
-        <p className="mono subpage-kicker">
-          CASE FILE {project.number} / {project.category.toUpperCase()}
-        </p>
-        <h1>{project.name}</h1>
-        <p className="case-study-summary">{project.summary}</p>
-
-        <div className="case-study-meta">
-          <div>
-            <span className="mono">STATUS</span>
-            <p>{project.status}</p>
-          </div>
-          <div>
-            <span className="mono">SOURCE</span>
-            <p>
-              {project.visibility === "private"
-                ? "Private repository"
-                : "Repository link provided"}
-            </p>
-          </div>
+    <article className="case">
+      <header className="container case-hero">
+        <Link href="/work" className="back">
+          ← All work
+        </Link>
+        <div className="case-meta-top">
+          <span className="eyebrow">{project.group}</span>
+          <StatusPill status={project.status} label={project.statusLabel} />
         </div>
+        <h1>{project.name}</h1>
+        <p className="lead">{project.tagline}</p>
 
-        {project.repository && (
-          <a
-            className="contact-cta case-source-link"
-            href={project.repository}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View source repository <span aria-hidden="true">↗</span>
-          </a>
-        )}
-      </div>
+        <dl className="facts">
+          <div>
+            <dt>Role</dt>
+            <dd>{project.role}</dd>
+          </div>
+          <div>
+            <dt>Stack</dt>
+            <dd>{project.stack.join(", ")}</dd>
+          </div>
+          {project.links && (
+            <div>
+              <dt>Links</dt>
+              <dd>
+                {project.links.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-link"
+                  >
+                    {link.label} <Arrow />
+                  </a>
+                ))}
+              </dd>
+            </div>
+          )}
+        </dl>
+      </header>
 
-      {(project.slug === "finpay" || project.slug === "nyumba") && (
-        <ArchitectureDiagram project={project.slug} />
-      )}
+      <section className="container flow" aria-label="How it works">
+        {project.flow.map((step, i) => (
+          <div key={step.title} className="flow-step">
+            <span className="flow-index" aria-hidden="true">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <h3>{step.title}</h3>
+            <p>{step.detail}</p>
+          </div>
+        ))}
+      </section>
 
-      <div className="case-study-grid">
-        <aside className="case-study-aside">
-          <span className="mono">TECHNOLOGIES</span>
-          <ul className="case-stack case-stack-vertical">
-            {project.stack.map((item) => (
+      <div className="container case-body">
+        <section>
+          <h2>Overview</h2>
+          <p>{project.overview}</p>
+        </section>
+        <section>
+          <h2>The problem</h2>
+          <p>{project.problem}</p>
+        </section>
+        <section>
+          <h2>Approach</h2>
+          <ul className="checklist">
+            {project.approach.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
-        </aside>
+        </section>
+        <section>
+          <h2>What I hold to</h2>
+          <div className="notes">
+            {project.notes.map((note) => (
+              <blockquote key={note}>{note}</blockquote>
+            ))}
+          </div>
+        </section>
+        <section className="status-note">
+          <h2>Where it stands</h2>
+          <p>{project.limitations}</p>
+        </section>
+      </div>
 
-        <div className="case-study-content">
-          <section>
-            <p className="mono content-index">01 / OVERVIEW</p>
-            <h2>The project</h2>
-            <p>{project.overview}</p>
-          </section>
-
-          <section>
-            <p className="mono content-index">02 / THE PROBLEM</p>
-            <h2>What needs to work</h2>
-            <p>{project.problem}</p>
-          </section>
-
-          <section>
-            <p className="mono content-index">03 / APPROACH</p>
-            <h2>How it is approached</h2>
-            <ul className="case-prose-list">
-              {project.approach.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
-
-          <section>
-            <p className="mono content-index">04 / ENGINEERING NOTES</p>
-            <h2>What matters</h2>
-            <ul className="case-prose-list">
-              {project.engineeringNotes.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="case-limitations">
-            <p className="mono content-index">05 / CURRENT SCOPE</p>
-            <h2>What this does not claim</h2>
-            <p>{project.limitations}</p>
-          </section>
-        </div>
+      <div className="container">
+        <Link href={`/work/${next.slug}`} className="next">
+          <span className="eyebrow">Next</span>
+          <span className="next-name">
+            {next.name} <Arrow />
+          </span>
+        </Link>
       </div>
     </article>
   );
 }
 
-export default function ProjectCaseStudy({ params }: PageProps) {
+export default function CaseStudyPage({ params }: PageProps) {
   return (
-    <main className="subpage">
-      <header className="site-header">
-        <Link className="wordmark" href="/">
-          JJ<span className="wordmark-period">.</span>
-        </Link>
-        <nav className="main-nav" aria-label="Main navigation">
-          <Link href="/work">Work</Link>
-          <Link href="/writing">Writing</Link>
-          <Link href="/#about">About</Link>
-        </nav>
-        <Link className="header-contact" href="/#contact">
-          Let&apos;s talk <span aria-hidden="true">↗</span>
-        </Link>
-      </header>
-
-      <Suspense fallback={<ProjectCaseStudyFallback />}>
-        <ProjectCaseStudyContent params={params} />
-      </Suspense>
-
-      <footer className="subpage-footer mono">
-        <Link href="/work">← ALL PROJECTS</Link>
-        <Link href="/#contact">CONTACT ↗</Link>
-      </footer>
-    </main>
+    <>
+      <SiteHeader />
+      <main className="page">
+        <Suspense fallback={<div className="container case-hero" aria-busy="true" />}>
+          <CaseStudy params={params} />
+        </Suspense>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

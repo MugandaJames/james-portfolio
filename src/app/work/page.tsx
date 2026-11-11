@@ -1,59 +1,68 @@
-
 import type { Metadata } from "next";
 import Link from "next/link";
-import ProjectCard from "@/components/ProjectCard";
+import { Arrow, SiteFooter, SiteHeader, StatusPill } from "@/components/Chrome";
 import { projects } from "@/content/projects";
 
 export const metadata: Metadata = {
-  title: "Selected Work",
+  title: "Work",
   description:
-    "Project case studies exploring backend engineering, financial systems, property technology, mobile development, and automation.",
+    "WAONA products and engineering case studies by James Juma Muganda: identity, ticketing, property technology and payments.",
 };
+
+const groups = [
+  { title: "WAONA products", key: "WAONA product" as const },
+  { title: "Engineering", key: "Engineering" as const },
+];
 
 export default function WorkPage() {
   return (
-    <main className="subpage">
-      <header className="site-header">
-        <Link className="wordmark" href="/">
-          JJ<span className="wordmark-period">.</span>
-        </Link>
-        <nav className="main-nav" aria-label="Main navigation">
-          <Link href="/work">Work</Link>
-          <Link href="/writing">Writing</Link>
-          <Link href="/#about">About</Link>
-        </nav>
-        <Link className="header-contact" href="/#contact">
-          Let&apos;s talk <span aria-hidden="true">↗</span>
-        </Link>
-      </header>
+    <>
+      <SiteHeader />
+      <main className="page">
+        <section className="container page-hero">
+          <p className="eyebrow">Work</p>
+          <h1>Products and systems.</h1>
+          <p className="lead">
+            What I&apos;m building at WAONA, and the engineering projects behind
+            how I think about correctness, boundaries and trust.
+          </p>
+        </section>
 
-      <section className="subpage-hero">
-        <p className="mono subpage-kicker">PORTFOLIO / SELECTED WORK</p>
-        <h1>
-          Built to
-          <br />
-          <em>understand.</em>
-        </h1>
-        <p>
-          A collection of software projects, technical experiments, and
-          engineering decisions. Each case study focuses on the problem,
-          approach, and lessons—not just the tools used.
-        </p>
-        <span className="mono subpage-count">
-          {String(projects.length).padStart(2, "0")} PROJECTS / 2026
-        </span>
-      </section>
-
-      <section className="case-index" aria-label="Project case studies">
-        {projects.map((project) => (
-          <ProjectCard key={project.slug} project={project} />
+        {groups.map((group) => (
+          <section key={group.key} className="container work-group">
+            <h2 className="work-group-title">{group.title}</h2>
+            <div className="work-list">
+              {projects
+                .filter((project) => project.group === group.key)
+                .map((project) => (
+                  <Link
+                    key={project.slug}
+                    href={`/work/${project.slug}`}
+                    className="work-item"
+                  >
+                    <div className="work-item-main">
+                      <div className="work-item-title">
+                        <h3>{project.name}</h3>
+                        <StatusPill
+                          status={project.status}
+                          label={project.statusLabel}
+                        />
+                      </div>
+                      <p>{project.summary}</p>
+                    </div>
+                    <ul className="tags work-item-tags">
+                      {project.stack.slice(0, 4).map((tech) => (
+                        <li key={tech}>{tech}</li>
+                      ))}
+                    </ul>
+                    <Arrow className="work-item-arrow" />
+                  </Link>
+                ))}
+            </div>
+          </section>
         ))}
-      </section>
-
-      <footer className="subpage-footer mono">
-        <Link href="/">← BACK TO HOME</Link>
-        <Link href="/#contact">CONTACT ↗</Link>
-      </footer>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }
