@@ -1,210 +1,202 @@
+export type ProjectStatus = "live" | "soon" | "design" | "dev";
+
 export type Project = {
   slug: string;
-  number: string;
   name: string;
-  category: string;
+  group: "WAONA product" | "Engineering";
+  status: ProjectStatus;
+  statusLabel: string;
+  tagline: string;
   summary: string;
-  status: string;
-  visibility: "private" | "public";
-  repository?: string;
+  role: string;
   stack: string[];
+  links?: { label: string; href: string }[];
   overview: string;
   problem: string;
   approach: string[];
-  engineeringNotes: string[];
+  flow: { title: string; detail: string }[];
+  notes: string[];
   limitations: string;
 };
 
 export const projects: Project[] = [
   {
-    slug: "finpay",
-    number: "01",
-    name: "FinPay",
-    category: "Financial systems",
+    slug: "waona-identity",
+    name: "WAONA Identity",
+    group: "WAONA product",
+    status: "live",
+    statusLabel: "Live",
+    tagline: "Sign-in and registration that developers plug into their own systems.",
     summary:
-      "A financial backend focused on transaction integrity, idempotent operations, concurrency, and reliable money movement.",
-    status: "In development",
-    visibility: "private",
-    stack: ["Python", "FastAPI", "PostgreSQL", "SQLAlchemy", "Redis", "Kafka"],
+      "An identity and authentication product built on Keycloak, now growing into a hosted identity platform with an SDK developers can drop into their apps.",
+    role: "Founder · product and engineering",
+    stack: ["Keycloak", "OpenID Connect", "OAuth 2.0", "Python SDK", "FastAPI"],
+    links: [{ label: "waona.ke", href: "https://waona.ke" }],
     overview:
-      "FinPay is a financial backend and system-design project exploring the correctness requirements behind money movement. The central design principle is that a payment operation must remain consistent when requests are retried, concurrent operations overlap, or work crosses application boundaries. PostgreSQL is treated as the authoritative store for financial state, while supporting infrastructure has distinct responsibilities.",
+      "WAONA Identity handles who a user is so that product teams don't have to rebuild sign-in, registration and session handling for every system. It is already live and integrated, and the direction is a hosted platform: a developer creates a project, installs a package and gets secure sign-in without running identity infrastructure themselves.",
     problem:
-      "A payment endpoint can return a successful HTTP response and still be part of an incorrect financial operation if its underlying state transitions are not protected. Clients retry requests after timeouts, multiple requests can target the same account, and a process can fail after a database commit but before notifying another service. The system must account for these cases rather than relying on the happy path.",
+      "Most teams either build authentication themselves — and get password storage, token handling and session expiry subtly wrong — or wire up a general-purpose identity server that is powerful but heavy to configure. Developers in this market need something that is standards-based and secure by default, but quick to integrate.",
     approach: [
-      "Treat PostgreSQL as the source of truth for account balances and financial records, keeping financial state changes within explicit database transaction boundaries.",
-      "Design idempotent request handling so a retry of the same logical operation can be distinguished from a genuinely new transaction.",
-      "Reason about concurrent requests and state transitions, including how database constraints, locking, and transaction isolation can protect financial invariants.",
-      "Explore an outbox-based event-delivery design with Kafka-oriented asynchronous processing, separating committed database state from downstream event consumption.",
-      "Keep authentication, request validation, persistence, rate limiting, and asynchronous processing as distinct responsibilities with clear boundaries.",
+      "Build on Keycloak and open standards (OpenID Connect, OAuth 2.0) rather than inventing a custom token scheme.",
+      "Wrap the identity server behind a developer-facing layer so integrators deal with a project, a client and a few calls — not realm configuration.",
+      "Ship a Python SDK, released under the MIT licence, so a FastAPI or Django service can verify users in a few lines.",
+      "Use the product in production across WAONA's own platforms first, so every rough edge is felt internally before external developers meet it.",
     ],
-    engineeringNotes: [
-      "Idempotency is a business-operation guarantee, not simply a cache of previously returned HTTP responses. The system must define what identifies a logical operation and how its result is recovered on retry.",
-      "A database transaction protects the changes inside its boundary; it does not automatically make a separate message broker or external service part of the same atomic operation.",
-      "Concurrency needs explicit invariants. Two requests that read the same initial state must not both perform incompatible updates merely because each request succeeds independently.",
-      "An outbox can help coordinate database commits and event publication, but delivery retries, duplicate messages, consumer idempotency, and eventual consistency still need deliberate handling.",
-      "Redis and other supporting services should not silently become authoritative for financial balances. Their role must be defined according to the consistency requirements of each operation.",
+    flow: [
+      { title: "Your app", detail: "Redirects the user to WAONA Identity to sign in or register." },
+      { title: "WAONA Identity", detail: "Authenticates the user against Keycloak using OpenID Connect." },
+      { title: "Tokens", detail: "Signed tokens return to your app with the user's identity and roles." },
+      { title: "SDK", detail: "Your backend verifies tokens and reads claims with the SDK." },
+    ],
+    notes: [
+      "Identity is infrastructure: the best version of it is the one developers stop thinking about.",
+      "Standards first. A platform that speaks OpenID Connect can be adopted, swapped or extended without lock-in.",
+      "Authentication tells you who someone is; authorization — what they may do with a specific record — still belongs to each product.",
     ],
     limitations:
-      "FinPay is a development project, not a claim of a production payment service. The outbox and Kafka-oriented approach is described as an architectural direction where applicable, not as proof that a complete distributed payment pipeline is deployed. No production transaction volumes, independent security review, regulatory certification, or performance benchmarks are claimed.",
+      "The hosted, self-serve developer platform is under active development. The current WAONA Identity is live and integrated.",
+  },
+  {
+    slug: "waona-tickets",
+    name: "WAONA Tickets",
+    group: "WAONA product",
+    status: "soon",
+    statusLabel: "Coming soon",
+    tagline: "Event discovery and ticketing for events across Kenya.",
+    summary:
+      "A ticketing platform where people discover events, buy tickets and pay by M-Pesa, and organizers run their events end to end.",
+    role: "Founder · full-stack engineering",
+    stack: ["FastAPI", "PostgreSQL", "Next.js", "Keycloak", "M-Pesa (Daraja)"],
+    overview:
+      "WAONA Tickets brings event discovery and ticket sales into one place. Buyers browse by category, follow organizers, save events and pay with M-Pesa. Organizers create events, publish ticket tiers and promo codes, and track sales. The backend is a FastAPI service; the frontend is a Next.js app with a dark, discovery-first design.",
+    problem:
+      "Ticketing looks simple until money and scarcity meet: a limited number of seats, many buyers paying at once over mobile money, and tickets that must stay valid when they are transferred or an event is cancelled. Every one of those moments has to stay correct, not just look right on screen.",
+    approach: [
+      "Treat the database as the source of truth for inventory so concurrent purchases can never oversell a ticket tier.",
+      "Handle M-Pesa payments as asynchronous, retry-safe operations: a ticket is issued only after a confirmed callback, and duplicate callbacks change nothing.",
+      "Build discovery like the best ticketing products — categories, filters, availability badges such as \"Almost full\" — with saved events synced to the server.",
+      "Give organizers profiles that buyers can follow, plus promo codes and sales tracking.",
+      "Support secure ticket transfer between users, with the original ticket invalidated in the same transaction that issues the new one.",
+      "Sign-in runs on Keycloak with a restyled, on-brand login, keeping identity out of the ticketing code.",
+    ],
+    flow: [
+      { title: "Discover", detail: "Browse events by category, availability and organizer." },
+      { title: "Reserve", detail: "Seats are held against inventory inside a database transaction." },
+      { title: "Pay", detail: "M-Pesa STK push; the payment callback is verified and idempotent." },
+      { title: "Issue", detail: "A ticket is issued, transferable to another user if needed." },
+    ],
+    notes: [
+      "A successful payment response and a correctly issued ticket are two different facts — the system records both.",
+      "Inventory is a concurrency problem first and a UI problem second.",
+      "Cancellation and refunds are designed in, not bolted on: buyers are refunded automatically when an event is cancelled.",
+    ],
+    limitations:
+      "WAONA Tickets is not launched yet. Payments currently run against the Safaricom sandbox, and payouts to organizers are still being built.",
+  },
+  {
+    slug: "pata-nyumba",
+    name: "Pata Nyumba",
+    group: "WAONA product",
+    status: "design",
+    statusLabel: "In design",
+    tagline: "House hunting for tenants. Property management for landlords.",
+    summary:
+      "A web platform for finding a place to live and for landlords and agents to manage properties, caretakers, rent and tenant complaints.",
+    role: "Founder · system design and backend",
+    stack: ["FastAPI", "PostgreSQL", "SQLAlchemy", "Next.js", "M-Pesa"],
+    overview:
+      "Pata Nyumba has two sides. Tenants search for houses by type and location. Landlords, owners and agents manage what they own: properties, units, the caretakers assigned to each property, rent collection, and complaints raised by tenants. The backend follows the same architecture and patterns as WAONA Tickets, so the two products share conventions.",
+    problem:
+      "Rental housing in Kenya runs on phone calls, WhatsApp and caretakers. Listings go stale, rent is tracked in notebooks, and complaints get lost between tenant, caretaker and landlord. One system needs to connect all three without giving anyone access to records that aren't theirs.",
+    approach: [
+      "Model the core entities — landlords, properties, units, caretakers, tenants, leases, rent and complaints — with clear ownership on every record.",
+      "Let landlords assign caretakers to specific properties and manage caretaker salaries, with optional bonuses for work well done.",
+      "Scope every query by role and relationship: a caretaker sees only assigned properties; a tenant sees only their own lease.",
+      "Require tenant acknowledgement before a deposit is settled, so neither side can close it unilaterally.",
+      "Keep personal data collection minimal in the first version.",
+    ],
+    flow: [
+      { title: "Search", detail: "Tenants find houses by type, area and price." },
+      { title: "Lease", detail: "A tenant is attached to a unit under a lease." },
+      { title: "Operate", detail: "Rent, caretakers and complaints are managed per property." },
+      { title: "Settle", detail: "Deposits close only with tenant acknowledgement." },
+    ],
+    notes: [
+      "Role checks alone aren't enough: access depends on who you are and how you relate to the property.",
+      "Sharing an architecture with WAONA Tickets means every new WAONA product starts from proven foundations.",
+    ],
+    limitations:
+      "Pata Nyumba is in design and early backend development. Nothing here implies a launched product.",
+  },
+  {
+    slug: "finpay",
+    name: "FinPay",
+    group: "Engineering",
+    status: "dev",
+    statusLabel: "In development",
+    tagline: "A payments backend built around correctness under retries and concurrency.",
+    summary:
+      "A financial backend focused on transaction integrity, idempotent operations, concurrency and reliable money movement.",
+    role: "System design and backend engineering",
+    stack: ["Python", "FastAPI", "PostgreSQL", "SQLAlchemy", "Redis", "Kafka"],
+    overview:
+      "FinPay explores the correctness requirements behind moving money. The central principle is that a payment must stay consistent when requests are retried, concurrent operations overlap, or work crosses service boundaries. PostgreSQL is the authoritative store for financial state, and every supporting system has a clearly limited role.",
+    problem:
+      "A payment endpoint can return a successful response and still be part of an incorrect financial operation. Clients retry after timeouts, multiple requests target the same account, and a process can fail after a database commit but before notifying another service. The system has to account for those cases rather than rely on the happy path.",
+    approach: [
+      "Keep balances and financial records in PostgreSQL, with every state change inside an explicit transaction boundary.",
+      "Design idempotent request handling so a retry of the same logical operation is distinguished from a genuinely new one.",
+      "Protect financial invariants under concurrency with constraints, locking and the right isolation level.",
+      "Use an outbox so committed database state and downstream event delivery (Kafka) stay coordinated.",
+      "Separate authentication, validation, persistence, rate limiting and async processing into distinct responsibilities.",
+    ],
+    flow: [
+      { title: "Request", detail: "Authenticate the caller and validate the operation." },
+      { title: "Idempotency", detail: "Recognise retries and recover the original result." },
+      { title: "Transaction", detail: "Commit financial state atomically in PostgreSQL." },
+      { title: "Outbox", detail: "Publish events after commit for downstream consumers." },
+    ],
+    notes: [
+      "Idempotency is a business-operation guarantee, not a cache of previous HTTP responses.",
+      "A database transaction doesn't make a message broker part of the same atomic operation.",
+      "Redis must never quietly become the source of truth for a balance.",
+    ],
+    limitations:
+      "FinPay is an engineering project, not a production payment service. No production volumes, security audit or certification are claimed.",
   },
   {
     slug: "nyumba",
-    number: "02",
     name: "Nyumba",
-    category: "Property technology",
+    group: "Engineering",
+    status: "dev",
+    statusLabel: "In development",
+    tagline: "A modular monolith for property and tenant management.",
     summary:
-      "A property and tenant management platform with modular backend boundaries, lease and rent workflows, and role-scoped access control.",
-    status: "In development",
-    visibility: "private",
-    stack: [
-      "Python",
-      "FastAPI",
-      "PostgreSQL",
-      "SQLAlchemy",
-      "Alembic",
-      "Redis",
-      "Next.js",
-    ],
+      "A property and tenant management backend with modular boundaries, lease and rent workflows, and role-scoped access control.",
+    role: "Architecture and backend engineering",
+    stack: ["Python", "FastAPI", "PostgreSQL", "SQLAlchemy", "Alembic", "Redis", "Next.js"],
     overview:
-      "Nyumba is a property and tenant management platform being developed as a modular monolith. Its backend separates domain logic, application use cases, infrastructure, and API presentation. The aim is to keep property-management rules understandable and testable without introducing the operational complexity of multiple independently deployed services too early.",
+      "Nyumba is built as a modular monolith. Domain logic, application use cases, infrastructure and the HTTP layer are kept apart, so property-management rules stay understandable and testable without the operational cost of microservices.",
     problem:
-      "Property management connects several related domains: owners, properties, units, leases, tenants, rent charges, and payments. These concepts share data, but they do not share identical responsibilities or permissions. The system must enforce valid state transitions and ensure that a user can access only the records permitted by their role and relationship to a property.",
+      "Owners, properties, units, leases, tenants, rent charges and payments share data but not responsibilities or permissions. The system must enforce valid state transitions and make sure every user can reach only the records their role and relationship allow.",
     approach: [
-      "Separate domain rules, application use cases, persistence implementations, and HTTP presentation so business decisions are not embedded entirely in API handlers.",
-      "Use repository abstractions and a Unit of Work to organise persistence access and transaction boundaries.",
-      "Define role boundaries deliberately: administrators operate on the management-company side, owners manage tenants and property records within their own scope, and tenants access their own relevant information.",
-      "Treat authorization as part of each use case and data-access path rather than relying on frontend visibility or role labels alone.",
-      "Model lease and rent workflows with explicit state and ownership constraints, and test cases involving invalid transitions, concurrent operations, and access to another user's records.",
-      "Use automated unit and integration tests to exercise application behaviour and API-level authorization, including cases that must be rejected.",
+      "Separate domain rules, use cases, persistence and presentation so business decisions don't live in API handlers.",
+      "Use repositories and a Unit of Work to organise persistence and transaction boundaries.",
+      "Make authorization part of every use case and data-access path, not a frontend concern.",
+      "Model lease and rent workflows with explicit states, and test invalid transitions and cross-tenant access.",
     ],
-    engineeringNotes: [
-      "A modular monolith can provide strong boundaries without distributed-service overhead. The quality of those boundaries matters more than splitting the application into services prematurely.",
-      "Authentication establishes who is making a request; authorization determines whether that identity can perform the specific action on the specific resource.",
-      "Role checks alone are insufficient for tenant and property data. An owner must be scoped to their own properties, and a tenant must not gain access to another tenant's records.",
-      "Repository methods and use cases should express the access constraints required by the operation instead of depending on every caller to remember them.",
-      "Lease and rent operations need to account for state and concurrency. A successful individual request is not enough if overlapping requests can violate a domain invariant.",
-      "Automated tests are part of the design process: they make permission boundaries and business rules observable as the application evolves.",
+    flow: [
+      { title: "API", detail: "Thin HTTP layer: parse, authenticate, delegate." },
+      { title: "Use cases", detail: "Application rules and authorization per operation." },
+      { title: "Domain", detail: "Entities and invariants for leases, rent and units." },
+      { title: "Infrastructure", detail: "Repositories, Unit of Work and PostgreSQL." },
+    ],
+    notes: [
+      "The quality of module boundaries matters more than splitting into services early.",
+      "Automated tests make permission boundaries observable as the system grows.",
     ],
     limitations:
-      "Nyumba is still under development and its repository is private. This case study describes the architecture, implementation work, and engineering concerns being addressed; it does not imply that every planned feature is complete or that the platform is deployed for production property management.",
-  },
-  {
-    slug: "jisave-sacco",
-    number: "03",
-    name: "JiSave SACCO",
-    category: "Financial applications",
-    summary:
-      "A SACCO management backend using the .NET ecosystem for cooperative financial application workflows.",
-    status: "Project",
-    visibility: "public",
-    repository: "https://github.com/MugandaJames/JiSaveSacco",
-    stack: ["C#", "ASP.NET Core", ".NET 8", "MySQL", "Entity Framework Core"],
-    overview:
-      "JiSave SACCO is a backend project for a cooperative financial application. It provides an opportunity to work with the C# and ASP.NET Core ecosystem and structure server-side application logic around persistence and authentication.",
-    problem:
-      "A financial application needs to organise business workflows and data access in a way that can be maintained as the application grows.",
-    approach: [
-      "Build the backend with ASP.NET Core.",
-      "Use Entity Framework Core to work with MySQL persistence.",
-      "Keep the API and data layer aligned with the needs of the companion application.",
-    ],
-    engineeringNotes: [
-      "API contracts and mobile-client expectations need to stay aligned.",
-      "Authentication is only one part of authorization; access to individual resources also needs careful rules.",
-    ],
-    limitations:
-      "This summary is intentionally limited to the technologies and project purpose currently documented here. Detailed feature claims should be updated after a full repository review.",
-  },
-  {
-    slug: "jisave-sacco-mobile",
-    number: "04",
-    name: "JiSave SACCO Mobile",
-    category: "Mobile development",
-    summary:
-      "An Android companion application for the JiSave SACCO project.",
-    status: "Project",
-    visibility: "public",
-    repository:
-      "https://github.com/MugandaJames/JiSaveSacco-mobile-app",
-    stack: [
-      "Android",
-      "Firebase Authentication",
-      "Firebase Realtime Database",
-      "Material Components",
-    ],
-    overview:
-      "JiSave SACCO Mobile is the Android companion application in the JiSave project family. It explores the mobile side of delivering a financial application experience.",
-    problem:
-      "Mobile applications must make core workflows understandable while coordinating authentication, remote data, loading states, and errors.",
-    approach: [
-      "Build for the Android platform.",
-      "Use Firebase authentication and database services in the application.",
-      "Use Material Components for interface elements.",
-    ],
-    engineeringNotes: [
-      "The user interface should communicate loading and failure states clearly.",
-      "Client-side checks do not replace authorization enforced by backend services or database rules.",
-    ],
-    limitations:
-      "This case study does not claim app-store distribution, production usage, or a specific level of test coverage.",
-  },
-  {
-    slug: "whatsapp-music-bot",
-    number: "05",
-    name: "WhatsApp Music Bot",
-    category: "Automation and AI",
-    summary:
-      "A WhatsApp bot combining messaging automation, media tooling, and AI-powered responses.",
-    status: "Project",
-    visibility: "public",
-    repository: "https://github.com/MugandaJames/whatsapp-music-bot",
-    stack: ["Node.js", "Baileys", "Gemini API", "yt-dlp", "FFmpeg"],
-    overview:
-      "The WhatsApp Music Bot explores how a messaging interface can act as the entry point for automation and media processing, with an AI API available for conversational features.",
-    problem:
-      "A bot needs to turn incoming messages into understandable commands, invoke the appropriate processing steps, and return useful responses without leaving users guessing when something fails.",
-    approach: [
-      "Use Node.js for bot-side application logic.",
-      "Use Baileys for WhatsApp Web protocol integration.",
-      "Use media tooling such as yt-dlp and FFmpeg for supported processing workflows.",
-      "Integrate the Gemini API for AI-powered responses.",
-    ],
-    engineeringNotes: [
-      "External processes can fail independently and need controlled error handling.",
-      "Long-running media operations need sensible limits and user feedback.",
-      "Third-party platform policies and media rights matter when operating automation tools.",
-    ],
-    limitations:
-      "The description does not imply official WhatsApp platform approval, uninterrupted operation, or permission to download copyrighted material.",
-  },
-  {
-    slug: "forex-eurusd-predictor",
-    number: "06",
-    name: "EUR/USD Predictor",
-    category: "Machine learning",
-    summary:
-      "An exploratory machine-learning project focused on analysing and forecasting the EUR/USD currency pair.",
-    status: "Exploratory",
-    visibility: "public",
-    repository:
-      "https://github.com/MugandaJames/forex-EURUSD-predictor",
-    stack: ["Python", "Time-series analysis", "Machine learning"],
-    overview:
-      "The EUR/USD Predictor explores the problem of forecasting a financial time series. It provides a setting to think critically about historical data, model evaluation, and the difference between a forecast and a reliable trading signal.",
-    problem:
-      "Financial time series are noisy, non-stationary, and vulnerable to misleading evaluation when future information leaks into training or when a model is judged on unsuitable data.",
-    approach: [
-      "Treat historical observations as a time-ordered dataset.",
-      "Evaluate forecasting methods against data not used during fitting.",
-      "Compare results with simple baselines before interpreting model performance.",
-    ],
-    engineeringNotes: [
-      "Random train-test splits can be inappropriate for time-series forecasting.",
-      "A model should be compared with a baseline and evaluated for leakage.",
-      "Predictive accuracy alone does not establish trading profitability.",
-    ],
-    limitations:
-      "No accuracy, profitability, or investment-performance claim is made here. Treat this as an educational project, not financial advice.",
+      "Nyumba is under development in a private repository; not every planned feature is complete.",
   },
 ];
 

@@ -1,59 +1,66 @@
-
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import ProjectCard from "@/components/ProjectCard";
+import { SiteFooter, SiteHeader, Status } from "@/components/Chrome";
 import { projects } from "@/content/projects";
+import { APP_BG, galleries } from "@/content/shots";
 
 export const metadata: Metadata = {
-  title: "Selected Work",
+  title: "Work",
   description:
-    "Project case studies exploring backend engineering, financial systems, property technology, mobile development, and automation.",
+    "WAONA products and engineering case studies by James Juma Muganda: identity, ticketing, property technology and payments.",
 };
 
 export default function WorkPage() {
   return (
-    <main className="subpage">
-      <header className="site-header">
-        <Link className="wordmark" href="/">
-          JJ<span className="wordmark-period">.</span>
-        </Link>
-        <nav className="main-nav" aria-label="Main navigation">
-          <Link href="/work">Work</Link>
-          <Link href="/writing">Writing</Link>
-          <Link href="/#about">About</Link>
-        </nav>
-        <Link className="header-contact" href="/#contact">
-          Let&apos;s talk <span aria-hidden="true">↗</span>
-        </Link>
-      </header>
+    <>
+      <SiteHeader />
+      <main className="page">
+        <section className="wrap page-hero">
+          <h1>Work</h1>
+          <p className="page-lede">
+            The products I&apos;m building at WAONA, and the engineering projects
+            behind how I think about correctness, boundaries and trust.
+          </p>
+        </section>
 
-      <section className="subpage-hero">
-        <p className="mono subpage-kicker">PORTFOLIO / SELECTED WORK</p>
-        <h1>
-          Built to
-          <br />
-          <em>understand.</em>
-        </h1>
-        <p>
-          A collection of software projects, technical experiments, and
-          engineering decisions. Each case study focuses on the problem,
-          approach, and lessons—not just the tools used.
-        </p>
-        <span className="mono subpage-count">
-          {String(projects.length).padStart(2, "0")} PROJECTS / 2026
-        </span>
-      </section>
-
-      <section className="case-index" aria-label="Project case studies">
-        {projects.map((project) => (
-          <ProjectCard key={project.slug} project={project} />
-        ))}
-      </section>
-
-      <footer className="subpage-footer mono">
-        <Link href="/">← BACK TO HOME</Link>
-        <Link href="/#contact">CONTACT ↗</Link>
-      </footer>
-    </main>
+        <section className="wrap index" aria-label="All projects">
+          {projects.map((project) => {
+            const cover = galleries[project.slug]?.[0];
+            return (
+              <Link key={project.slug} href={`/work/${project.slug}`} className="index-item">
+                <div className="index-copy">
+                  <p className="index-group">{project.group}</p>
+                  <h2>{project.name}</h2>
+                  <p className="index-summary">{project.summary}</p>
+                  <div className="index-meta">
+                    <Status status={project.status} label={project.statusLabel} />
+                    <span>{project.stack.slice(0, 4).join(", ")}</span>
+                  </div>
+                </div>
+                <div className="index-visual" style={{ backgroundColor: APP_BG }}>
+                  {cover ? (
+                    <Image
+                      src={cover.src}
+                      alt={cover.alt}
+                      placeholder="blur"
+                      sizes="(max-width: 900px) 92vw, 460px"
+                      className="index-img"
+                    />
+                  ) : (
+                    <ol className="index-flow" aria-label={`${project.name} flow`}>
+                      {project.flow.map((step) => (
+                        <li key={step.title}>{step.title}</li>
+                      ))}
+                    </ol>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
+        </section>
+      </main>
+      <SiteFooter />
+    </>
   );
 }
