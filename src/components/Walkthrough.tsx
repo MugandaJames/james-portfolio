@@ -93,19 +93,18 @@ export default function Walkthrough() {
           end: () => `+=${window.innerHeight * (steps - 1) * 0.9}`,
           pin: true,
           scrub: 0.6,
-          snap: { snapTo: 1 / (steps - 1), duration: 0.5, ease: "power2.inOut" },
           invalidateOnRefresh: true,
         },
       });
 
-      // Each step owns one unit of the timeline. Transitions run in the middle
-      // of the unit, so every snap point rests on a clean, fully visible step.
+      // Each step owns one unit of the timeline. Transitions take the middle 40%,
+      // so each step has a wide resting zone where it is fully clear.
       for (let i = 1; i < steps; i++) {
-        const t = i - 1 + 0.2;
-        tl.to(copies[i - 1], { autoAlpha: 0, y: -40, duration: 0.25 }, t)
-          .to(screens[i], { clipPath: "inset(0% 0% 0% 0%)", duration: 0.6, ease: "power2.inOut" }, t)
-          .to(screens[i - 1], { scale: 0.94, autoAlpha: 0, duration: 0.6, ease: "power2.inOut" }, t)
-          .to(copies[i], { autoAlpha: 1, y: 0, duration: 0.3 }, t + 0.3);
+        const t = i - 1 + 0.3;
+        tl.to(copies[i - 1], { autoAlpha: 0, y: -40, duration: 0.15 }, t)
+          .to(screens[i], { clipPath: "inset(0% 0% 0% 0%)", duration: 0.4, ease: "power2.inOut" }, t)
+          .to(screens[i - 1], { scale: 0.94, autoAlpha: 0, duration: 0.4, ease: "power2.inOut" }, t)
+          .to(copies[i], { autoAlpha: 1, y: 0, duration: 0.15 }, t + 0.25);
       }
       tl.fromTo(".scene-rail-fill", { scaleY: 0 }, { scaleY: 1, duration: steps - 1 }, 0);
 
