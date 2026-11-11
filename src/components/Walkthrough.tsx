@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Phone } from "@/components/Frames";
 import { APP_BG, ticketJourney } from "@/content/shots";
+import { haptic } from "@/components/motion/device";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -17,6 +18,59 @@ gsap.registerPlugin(ScrollTrigger);
  */
 export default function Walkthrough() {
   const root = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLOListElement>(null);
+  const [active, setActive] = useState(0);
+  const [swiped, setSwiped] = useState(false);
+
+  // Phones: a swipeable row. Each card scales into focus as it reaches the
+  // centre, the dots follow, and a light tick marks each new step.
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    let frame = 0;
+    let last = 0;
+    const update = () => {
+      frame = 0;
+      const mid = el.scrollLeft + el.clientWidth / 2;
+      const cards = Array.from(el.children) as HTMLElement[];
+      let best = 0;
+      let bestDist = Infinity;
+      cards.forEach((card, i) => {
+        const center = card.offsetLeft + card.offsetWidth / 2;
+        const dist = Math.abs(center - mid);
+        const focus = Math.max(0, 1 - dist / card.offsetWidth);
+        card.style.setProperty("--focus", focus.toFixed(3));
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = i;
+        }
+      });
+      if (best !== last) {
+        last = best;
+        haptic(8);
+      }
+      setActive(best);
+    };
+    const onScroll = () => {
+      setSwiped(true);
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    frame = requestAnimationFrame(update);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", update);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  const goTo = (i: number) => {
+    const el = track.current;
+    const card = el?.children[i] as HTMLElement | undefined;
+    if (!el || !card) return;
+    el.scrollTo({ left: card.offsetLeft - (el.clientWidth - card.offsetWidth) / 2, behavior: "smooth" });
+  };
 
   useEffect(() => {
     const el = root.current;
@@ -113,21 +167,38 @@ export default function Walkthrough() {
         </div>
       </div>
 
-      {/* Stacked layout (narrow screens, reduced motion, screen readers) */}
-      <ol className="scene-list">
-        {ticketJourney.map((step, i) => (
-          <li key={step.title} className="scene-item">
-            <span className="scene-item-count" aria-hidden="true">
-              {i + 1}
-            </span>
-            <div>
-              <h3>{step.title}</h3>
-              <p>{step.body}</p>
+      {/* Swipeable row (narrow screens, reduced motion, screen readers) */}
+      <div className="scene-mobile">
+        <ol className="scene-list" ref={track}>
+          {ticketJourney.map((step, i) => (
+            <li key={step.title} className="scene-item">
               <Phone shot={step.shot} className="scene-item-phone" sizes="260px" />
-            </div>
-          </li>
-        ))}
-      </ol>
+              <div className="scene-item-copy">
+                <span className="scene-item-count" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="scene-dots" role="group" aria-label="Choose a step">
+          {ticketJourney.map((step, i) => (
+            <button
+              key={step.title}
+              type="button"
+              className={i === active ? "is-on" : ""}
+              aria-label={`Step ${i + 1}: ${step.title}`}
+              aria-current={i === active ? "step" : undefined}
+              onClick={() => goTo(i)}
+            />
+          ))}
+          <span className={`scene-swipe${swiped ? " is-gone" : ""}`} aria-hidden="true">
+            Swipe
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

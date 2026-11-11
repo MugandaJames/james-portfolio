@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CopyrightYear from "@/components/CopyrightYear";
+import MobileMenu from "@/components/MobileMenu";
 import { site } from "@/content/site";
 import type { ProjectStatus } from "@/content/projects";
 
@@ -32,6 +33,7 @@ export function SiteHeader() {
             Email me
           </a>
         </nav>
+        <MobileMenu />
       </div>
     </header>
   );

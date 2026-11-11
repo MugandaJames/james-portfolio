@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { haptic } from "@/components/motion/device";
 
 type Stage = "idle" | "redirect" | "form" | "verify" | "done";
 
@@ -72,6 +73,7 @@ export default function IdentityDemo() {
       exp: now + 300,
     });
     setStage("done");
+    haptic([12, 50, 20]);
     running.current = false;
   }
 

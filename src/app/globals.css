@@ -122,10 +122,19 @@ p {
   position: sticky;
   top: 0;
   z-index: 40;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* The blur lives on a pseudo-element: a backdrop-filter on the header itself
+   would trap the full-screen mobile menu inside the header box. */
+.header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background: rgba(10, 16, 32, 0.78);
   backdrop-filter: blur(16px) saturate(150%);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border-bottom: 1px solid var(--rule);
 }
 
 .header-inner {
@@ -1515,42 +1524,114 @@ html.lenis body {
   display: none;
 }
 
+/* Swipeable row of steps (phones, tablets, reduced motion) */
+.scene-mobile {
+  position: relative;
+}
+
 .scene-list {
-  max-width: var(--wrap);
-  margin: 0 auto;
-  padding: 0 var(--gutter);
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 8px max(var(--gutter), calc(50vw - 150px)) 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scene-list::-webkit-scrollbar {
+  display: none;
 }
 
 .scene-item {
+  --focus: 1;
+  flex: 0 0 300px;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  transform: scale(calc(0.86 + var(--focus) * 0.14));
+  opacity: calc(0.35 + var(--focus) * 0.65);
+  transition: transform 0.12s linear, opacity 0.12s linear;
+}
+
+.scene-item-phone {
+  width: 100%;
+}
+
+.scene-item-copy {
   display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 8px;
-  padding: 40px 0;
-  border-top: 1px solid var(--rule);
+  grid-template-columns: 36px 1fr;
+  column-gap: 4px;
 }
 
 .scene-item-count {
+  grid-row: span 2;
   font-family: var(--serif);
-  font-size: 48px;
+  font-size: 40px;
   line-height: 0.9;
   color: var(--amber);
 }
 
 .scene-item h3 {
-  font-size: clamp(26px, 3vw, 36px);
+  font-size: 24px;
   letter-spacing: -0.03em;
 }
 
 .scene-item p {
-  margin-top: 10px;
-  font-size: 18px;
+  margin-top: 8px;
+  font-size: 16px;
   color: var(--mist);
-  max-width: 42ch;
 }
 
-.scene-item-phone {
-  width: min(260px, 70vw);
-  margin-top: 28px;
+.scene-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.scene-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--rule-strong);
+  cursor: pointer;
+  transition:
+    width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.3s;
+}
+
+.scene-dots button.is-on {
+  width: 28px;
+  background: var(--amber);
+}
+
+.scene-swipe {
+  margin-left: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mist);
+  animation: nudge 1.6s ease-in-out infinite;
+  transition: opacity 0.4s;
+}
+
+.scene-swipe::after {
+  content: " \2192";
+}
+
+.scene-swipe.is-gone {
+  opacity: 0;
+}
+
+@keyframes nudge {
+  50% {
+    transform: translateX(6px);
+  }
 }
 
 @media (min-width: 1001px) and (prefers-reduced-motion: no-preference) {
@@ -1566,7 +1647,7 @@ html.lenis body {
   }
 
   /* Kept for screen readers; the pinned scene is decorative. */
-  .scene-list {
+  .scene-mobile {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -2223,6 +2304,160 @@ button.btn--line {
   }
 }
 
+
+/* ---------- Scroll progress ---------- */
+
+.scroll-progress {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 60;
+  height: 2px;
+  background: linear-gradient(90deg, var(--cyan), var(--amber));
+  transform-origin: left;
+  transform: scaleX(0);
+  pointer-events: none;
+}
+
+/* ---------- Mobile menu ---------- */
+
+.mm-button {
+  display: none;
+  position: relative;
+  z-index: 70;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  background: var(--paper);
+  cursor: pointer;
+}
+
+.mm-button span {
+  position: absolute;
+  left: 13px;
+  width: 16px;
+  height: 1.5px;
+  background: var(--ink);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mm-button span:first-child {
+  top: 18px;
+}
+
+.mm-button span:last-child {
+  top: 24px;
+}
+
+.mm-button.is-open span:first-child {
+  transform: translateY(3px) rotate(45deg);
+}
+
+.mm-button.is-open span:last-child {
+  transform: translateY(-3px) rotate(-45deg);
+}
+
+.mm-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 120px var(--gutter) 40px;
+  background:
+    radial-gradient(80% 50% at 100% 0%, rgba(56, 214, 232, 0.14), transparent),
+    var(--ink-2);
+  visibility: hidden;
+  clip-path: circle(0% at calc(100% - 44px) 34px);
+}
+
+.mm-item {
+  overflow: hidden;
+  padding-bottom: 0.08em;
+}
+
+.mm-link {
+  display: inline-block;
+  font-family: var(--serif);
+  font-size: clamp(44px, 12vw, 64px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.mm-link:active {
+  color: var(--cyan);
+}
+
+.mm-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mm-mail {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--cyan);
+}
+
+.mm-foot ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  color: var(--mist);
+  font-weight: 500;
+}
+
+html.menu-open,
+html.menu-open body {
+  overflow: hidden;
+}
+
+/* ---------- Touch feedback ---------- */
+
+.hero-stage {
+  touch-action: pan-y;
+}
+
+@media (hover: none) {
+  .btn,
+  .idemo-waona,
+  .idemo-replay,
+  .scene-dots button,
+  .mm-button {
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 0.15s ease,
+      background 0.2s;
+  }
+
+  .btn:active,
+  .idemo-waona:active,
+  .idemo-replay:active,
+  .mm-button:active {
+    transform: scale(0.95);
+  }
+
+  .index-item:active h2,
+  .nyumba:active h2,
+  .system:active h3 {
+    color: var(--cyan);
+  }
+}
+
+@media (max-width: 640px) {
+  .nav {
+    display: none;
+  }
+
+  .mm-button {
+    display: block;
+  }
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 1000px) {
@@ -2263,14 +2498,6 @@ button.btn--line {
 @media (max-width: 640px) {
   body {
     font-size: 16px;
-  }
-
-  .nav {
-    gap: 18px;
-  }
-
-  .nav a[href="/#about"] {
-    display: none;
   }
 
   .principles,

@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { sans, serif } from "./fonts";
 import Cursor from "@/components/motion/Cursor";
 import SmoothScroll from "@/components/motion/SmoothScroll";
+import ScrollProgress from "@/components/motion/ScrollProgress";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -56,6 +57,7 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        <ScrollProgress />
         <SmoothScroll />
         <Suspense fallback={null}>
           <Cursor />
