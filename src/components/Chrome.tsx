@@ -27,8 +27,9 @@ export function SiteHeader() {
           James Muganda
         </Link>
         <nav className="nav" aria-label="Main">
-          <Link href="/work">Work</Link>
+          <Link href="/#work">Work</Link>
           <Link href="/#about">About</Link>
+          <Link href="/#try">Try</Link>
           <a href={`mailto:${site.email}`} className="nav-mail">
             Email me
           </a>

@@ -16,18 +16,22 @@
 
 ## 3. Information architecture
 
+The home page opens on James, not on a product. Products appear as portfolio work; the interactive pieces are gathered as demos.
+
 ```
 /                 Home
-  Hero            Name in display serif, one-line intro, CTAs; real desktop + phone screenshots
-  Now             Status line for WAONA Identity, WAONA Tickets, Pata Nyumba
-  #tickets        WAONA Tickets: scroll-pinned walkthrough of the real app, then Studio for organizers
-  #identity       WAONA Identity: what it does, with real sign-in and hand-off screenshots
-  Pata Nyumba     Typographic block (no screens yet)
-  Systems         FinPay and Nyumba with their request flows
+  Hero            Name (letters lift toward the pointer/finger), who he is, based in + live Nairobi time,
+                  what he's doing right now, what he's open to; CTAs
+  #work           Selected work: an index of all projects; mouse hover shows a floating preview,
+                  touch screens show each row's preview inline
   #about          Statement, story, principles, toolkit
+  Marquee         Stack
+  #try            Things you can try: interactive ticket (Tickets), sign-in demo (Identity),
+                  idempotency demo (FinPay)
   #contact        Email + social links
 /work             Index: every project with its lead screenshot or flow
-/work/[slug]      Case study: hero, facts, screenshot gallery, flow, overview, approach, beliefs, status
+/work/[slug]      Case study: hero, facts, (Tickets only: pinned journey scene), screenshot gallery,
+                  flow, overview, approach, beliefs, status
 ```
 
 ## 4. Visual system
@@ -59,19 +63,19 @@ The idea: the interactions are the products' own mechanics, so the site demonstr
 | ----- | ----- | ------------ | ---------- |
 | Smooth scroll | Whole site | Inertial scrolling synced to every scroll scene | Lenis + GSAP ticker (`motion/SmoothScroll.tsx`) |
 | Custom cursor | Whole site, mouse only | Dot + trailing ring; grows over links and shows a label from `data-cursor` | GSAP `quickTo` (`motion/Cursor.tsx`) |
-| Hero entrance | Home | Name rises letter by letter, copy and devices settle in (one orchestrated moment) | GSAP SplitText timeline (`Hero.tsx`) |
-| Hero depth | Home | Device stack and floating chips tilt in 3D toward the pointer, each layer by its depth | GSAP `quickTo`, CSS 3D (`Hero.tsx`) |
+| Hero entrance | Home | Name rises letter by letter, then the copy follows (one orchestrated moment) | GSAP SplitText timeline (`Hero.tsx`) |
+| Name letters | Home hero | After the entrance, letters near the pointer (or a finger dragged across) lift and lean | GSAP `quickTo` (`Hero.tsx`) |
+| Live clock | Home hero | Nairobi local time, updated every 15 seconds | `Intl.DateTimeFormat` (`Hero.tsx`) |
+| Work index preview | Home, mouse only | A preview of the hovered project floats beside the pointer and tilts with its speed; other rows dim. Touch screens show previews inline | GSAP `quickTo` (`WorkIndex.tsx`) |
 | Magnetic buttons | Hero CTAs, contact email | Pull toward the pointer, spring back | `motion/Magnetic.tsx` |
 | Stack marquee | Below hero | Endless row; speeds up, reverses and skews with scroll velocity | ScrollTrigger velocity (`motion/Marquee.tsx`) |
 | Interactive ticket | Tickets | Tilts with a moving sheen; press to flip to a QR code that opens waona.ke | CSS 3D + GSAP CSS variables (`TicketCard.tsx`) |
-| Pinned journey | Tickets | Section pins; each real screen wipes up over the last, copy swaps, rail fills, snaps per step | ScrollTrigger pin + scrub + snap (`Walkthrough.tsx`) |
-| Studio reveal | Tickets | Desktop screenshot unfolds from tilted to flat while scrolling | ScrollTrigger scrub (`motion/ScrollScale.tsx`) |
+| Pinned journey | WAONA Tickets case study | Section pins; each real screen wipes up over the last, copy swaps, rail fills, snaps per step | ScrollTrigger pin + scrub + snap (`Walkthrough.tsx`) |
 | Sign-in demo | Identity | Plays the real flow with sample data: app hands off, form fills, decoded ID-token claims appear | React state (`IdentityDemo.tsx`) |
 | Idempotency demo | FinPay | Send a payment, retry it with the same key: the retry stops at the idempotency check and the balance is charged once | React state (`IdempotencyDemo.tsx`) |
 | Scroll progress | Whole site | Thin cyan-to-amber bar along the top fills as you read | ScrollTrigger scrub (`motion/ScrollProgress.tsx`) |
 | Mobile menu | Phones (≤640px) | Full-screen panel opens as a circle growing from the button; links rise in; Esc closes | GSAP timeline (`MobileMenu.tsx`) |
-| Hero parallax + float | Home, all devices | Layers move at different speeds while scrolling; chips float gently | ScrollTrigger scrub (`Hero.tsx`) |
-| Phone tilt | Hero, ticket (Android) | The device stack and ticket follow the phone's motion sensor | `deviceorientation` (`motion/device.ts`) |
+| Phone tilt | Ticket (Android) | The ticket catches the light as the phone tilts | `deviceorientation` (`motion/device.ts`) |
 | Journey carousel | Tickets, below 1000px | Swipeable row; each phone scales into focus at the centre; dots follow and can be tapped | CSS scroll-snap + `--focus` variable (`Walkthrough.tsx`) |
 | Haptics | Ticket flip, carousel steps, demos, menu (Android) | Short vibrations at key moments | `navigator.vibrate` (`motion/device.ts`) |
 | Heading reveals | Chapter headings only | Lines rise out of a mask on first view | SplitText + ScrollTrigger (`motion/Reveal.tsx`) |
@@ -116,6 +120,7 @@ Real product screenshots copied from the WAONA website repo into `src/assets/sho
 
 - Removed: Writing section and routes, MDX pipeline, academic/education block, creative-writing copy, JiSave, WhatsApp bot and EUR/USD predictor projects, numbered "case file" labels.
 - Added: founder positioning, real WAONA screenshots, scroll-pinned Tickets walkthrough, screenshot galleries in case studies, principles, toolkit, 404 page.
+- Fifth pass: portfolio-first home. Opens on James (name, who he is, live Nairobi time, what he's doing now) instead of WAONA Tickets; selected-work index with floating previews; demos gathered under "Things you can try"; the pinned Tickets scene moved to the Tickets case study.
 - Fourth pass: mobile-first interactions (journey carousel, touch-drag ticket, motion-sensor tilt, haptics, animated mobile menu, scroll progress, hero parallax and float, press feedback).
 - Third pass: GSAP + Lenis motion system, interactive ticket, Identity sign-in demo, FinPay idempotency demo, pinned Tickets scene, custom cursor, magnetic buttons, velocity marquee, footer wordmark.
 - Second pass: replaced Geist and the generic dark template (terminal panel, mono labels, card grid) with a palette and type taken from the WAONA products.

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter, SiteHeader, Status } from "@/components/Chrome";
 import { getProject, projects } from "@/content/projects";
 import { APP_BG, galleries } from "@/content/shots";
+import Walkthrough from "@/components/Walkthrough";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -83,6 +84,15 @@ async function CaseStudy({ params }: PageProps) {
           )}
         </dl>
       </header>
+
+      {project.slug === "waona-tickets" && (
+        <section className="case-journey" aria-label="The ticket-buying journey">
+          <div className="wrap">
+            <h2 className="case-journey-title">From finding an event to walking in</h2>
+          </div>
+          <Walkthrough />
+        </section>
+      )}
 
       {gallery.length > 0 && (
         <section className="wrap gallery" aria-label={`${project.name} screens`}>

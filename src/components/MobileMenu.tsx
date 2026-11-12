@@ -7,10 +7,10 @@ import { haptic, prefersReducedMotion } from "@/components/motion/device";
 import { site } from "@/content/site";
 
 const links = [
-  { label: "WAONA Tickets", href: "/#tickets" },
-  { label: "WAONA Identity", href: "/#identity" },
-  { label: "All work", href: "/work" },
+  { label: "Selected work", href: "/#work" },
   { label: "About", href: "/#about" },
+  { label: "Things to try", href: "/#try" },
+  { label: "All work", href: "/work" },
 ];
 
 /**
