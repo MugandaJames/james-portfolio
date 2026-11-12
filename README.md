@@ -2,7 +2,7 @@
 
 Personal site of **James Juma Muganda**, founder and CEO of [WAONA](https://waona.ke) and software engineer, based in Nairobi, Kenya.
 
-The site presents James as a founder who builds: the WAONA products he leads (WAONA Identity, WAONA Tickets, Pata Nyumba) and the engineering projects behind how he thinks about correctness and system boundaries (FinPay, Nyumba).
+The home page opens on James himself, then his selected work (the WAONA products he leads and the engineering projects behind how he thinks about correctness), his story, and small working demos you can try.
 
 ## Pages
 
@@ -16,7 +16,7 @@ The site presents James as a founder who builds: the WAONA products he leads (WA
 
 Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS v4 (plus hand-written CSS in `globals.css`), self-hosted Instrument Sans and Instrument Serif, GSAP (ScrollTrigger, SplitText) and Lenis for motion.
 
-The home page is interactive: a pinned scroll walkthrough of WAONA Tickets, a flippable ticket, a playable WAONA Identity sign-in demo and a FinPay idempotency demo. See `docs/DESIGN.md` section 4a.
+The site is interactive: letters in the name react to the pointer, the work index shows floating previews, and "Things you can try" has a flippable ticket, a playable WAONA Identity sign-in demo and a FinPay idempotency demo. The WAONA Tickets case study has a pinned scroll walkthrough. See `docs/DESIGN.md` section 4a.
 
 ## Editing content
 
